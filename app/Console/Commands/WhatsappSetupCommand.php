@@ -34,7 +34,7 @@ class WhatsappSetupCommand extends Command
         $appId = config('whatsapp.app_id');
         $appSecret = config('whatsapp.app_secret');
 
-        if (! $appId || ! $appSecret) {
+        if (!$appId || !$appSecret) {
             $this->error('Please set your WHATSAPP_APP_ID and WHATSAPP_APP_SECRET in the .env file first.');
 
             return 1;
@@ -49,7 +49,7 @@ class WhatsappSetupCommand extends Command
 
         $shortLivedToken = $this->ask('2. Enter the short-lived access token you got from the Graph API Explorer');
 
-        if (! $shortLivedToken) {
+        if (!$shortLivedToken) {
             $this->error('Short-lived token is required.');
 
             return 1;

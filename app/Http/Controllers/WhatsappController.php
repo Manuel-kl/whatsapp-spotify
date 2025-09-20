@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class WhatsappController extends Controller
 {
@@ -34,8 +34,9 @@ class WhatsappController extends Controller
 
         $respJson = $response->json();
 
-        if (! empty($respJson['messages'][0]['id'])) {
+        if (!empty($respJson['messages'][0]['id'])) {
             WhatsappMessage::create([
+                'user_id' => Auth::user()->id,
                 'wamid' => $respJson['messages'][0]['id'],
                 'from' => $phoneNumberId,
                 'to' => $validated['to'],
@@ -54,39 +55,24 @@ class WhatsappController extends Controller
         $payload = $request->all();
 
         if ($request->isMethod('get')) {
-            Log::info('Received GET request on WhatsApp webhook', [
-                'query' => $request->query(),
-            ]);
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
             $challenge = $request->query('hub_challenge');
 
             if ($mode === 'subscribe' && $token === config('whatsapp.verify_token')) {
-                Log::info('Webhook verification successful', [
-                    'mode' => $mode,
-                    'token' => $token,
-                    'challenge' => $challenge,
-                ]);
-
                 return response($challenge, 200);
             }
-
-            Log::warning('Webhook verification failed', [
-                'mode' => $mode,
-                'token' => $token,
-                'config_token' => config('whatsapp.verify_token')
-            ]);
 
             return response('Forbidden', 403);
         }
 
-        if (! $this->isValidMessageWebhook($payload)) {
+        if (!$this->isValidMessageWebhook($payload)) {
             return response()->json(['error' => 'Invalid webhook payload'], 400);
         }
 
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
 
-        if (! empty($value['messages'])) {
+        if (!empty($value['messages'])) {
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
                 if (isset($msg['context']['id'])) {
@@ -107,7 +93,7 @@ class WhatsappController extends Controller
             }
         }
 
-        if (! empty($value['statuses'])) {
+        if (!empty($value['statuses'])) {
             foreach ($value['statuses'] as $status) {
                 $conversationData = [];
                 if (isset($status['conversation']['id'])) {
@@ -146,7 +132,7 @@ class WhatsappController extends Controller
 
     private function isValidMessageWebhook($payload)
     {
-        if (! isset($payload['object']) || ! isset($payload['entry'])) {
+        if (!isset($payload['object']) || !isset($payload['entry'])) {
             return false;
         }
 
@@ -154,26 +140,26 @@ class WhatsappController extends Controller
             return false;
         }
 
-        if (! is_array($payload['entry']) || empty($payload['entry'])) {
+        if (!is_array($payload['entry']) || empty($payload['entry'])) {
             return false;
         }
 
         $entry = $payload['entry'][0];
-        if (! isset($entry['changes']) || ! is_array($entry['changes']) || empty($entry['changes'])) {
+        if (!isset($entry['changes']) || !is_array($entry['changes']) || empty($entry['changes'])) {
             return false;
         }
 
         $change = $entry['changes'][0];
-        if (! isset($change['value']) || ! is_array($change['value'])) {
+        if (!isset($change['value']) || !is_array($change['value'])) {
             return false;
         }
 
-        if (! isset($change['field']) || $change['field'] !== 'messages') {
+        if (!isset($change['field']) || $change['field'] !== 'messages') {
             return false;
         }
 
         $value = $change['value'];
-        if (! isset($value['messaging_product']) || $value['messaging_product'] !== 'whatsapp') {
+        if (!isset($value['messaging_product']) || $value['messaging_product'] !== 'whatsapp') {
             return false;
         }
 

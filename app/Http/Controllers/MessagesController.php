@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WhatsappMessage;
+use Illuminate\Support\Facades\Auth;
 
 class MessagesController extends Controller
 {
     public function index()
     {
-        $messages = WhatsappMessage::all();
+        $messages = Auth::user()->whatsappMessages;
 
         return response()->json([
             'success' => true,

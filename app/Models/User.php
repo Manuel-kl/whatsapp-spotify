@@ -35,4 +35,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function whatsappMessages()
+    {
+        return $this->hasMany(WhatsappMessage::class);
+    }
 }

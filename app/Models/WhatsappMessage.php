@@ -11,4 +11,9 @@ class WhatsappMessage extends Model
         'conversation_expires_at' => 'datetime',
         'pricing_billable' => 'boolean',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
