@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WhatsappMessage;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\WhatsappMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
@@ -54,6 +55,7 @@ class WhatsappController extends Controller
     {
         $payload = $request->all();
         logger("webhook received");
+        logger("payload", $payload);
         if ($request->isMethod('get')) {
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
@@ -76,13 +78,25 @@ class WhatsappController extends Controller
             logger("messages", $value['messages']);
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
+
                 if (isset($msg['context']['id'])) {
                     $conversationData['conversation_id'] = $msg['context']['id'];
+                }
+
+                $from = $msg['from'] ?? null;
+
+                $user = User::where('phone', $from)->first();
+
+                if(!$user){
+                    $this->sendMessage($from, "Please sign up to continue at https://mcps.east80.co.ke");
+
+                    return response()->json(['status' => 'received']);
                 }
 
                 WhatsappMessage::updateOrCreate(
                     ['wamid' => $msg['id']],
                     array_merge([
+                        'user_id' => $user->id,
                         'from' => $msg['from'] ?? null,
                         'to' => $value['metadata']['display_phone_number'] ?? null,
                         'body' => $msg['text']['body'] ?? null,
