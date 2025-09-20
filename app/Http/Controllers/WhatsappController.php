@@ -17,6 +17,11 @@ class WhatsappController extends Controller
             'body' => 'required|string',
         ]);
 
+        return $this->sendWhatsAppMessage($validated['to'], $validated['body']);
+    }
+
+    private function sendWhatsAppMessage($to, $body)
+    {
         $phoneNumberId = config('whatsapp.business_phone_id');
         $accessToken = config('whatsapp.access_token');
         $apiVersion = config('whatsapp.api_version');
@@ -26,10 +31,10 @@ class WhatsappController extends Controller
 
         $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
-            'to' => $validated['to'],
+            'to' => $to,
             'type' => 'text',
             'text' => [
-                'body' => $validated['body'],
+                'body' => $body,
             ],
         ]);
 
@@ -40,11 +45,15 @@ class WhatsappController extends Controller
                 'user_id' => Auth::user()->id,
                 'wamid' => $respJson['messages'][0]['id'],
                 'from' => $phoneNumberId,
-                'to' => $validated['to'],
-                'body' => $validated['body'],
+                'to' => $to,
+                'body' => $body,
                 'type' => 'text',
                 'status' => null,
                 'timestamp' => now(),
+            ]);
+
+            Auth::user()->update([
+                'wa_id' => $respJson['contacts'][0]['wa_id'],
             ]);
         }
 
@@ -54,8 +63,6 @@ class WhatsappController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
-        logger("webhook received");
-        logger("payload", $payload);
         if ($request->isMethod('get')) {
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
@@ -85,10 +92,10 @@ class WhatsappController extends Controller
 
                 $from = $msg['from'] ?? null;
 
-                $user = User::where('phone', $from)->first();
+                $user = User::where('wa_id', $from)->first();
 
                 if(!$user){
-                    $this->sendMessage($from, "Please sign up to continue at https://mcps.east80.co.ke");
+                    $this->sendWhatsAppMessage($from, "Please sign up to continue at https://mcps.east80.co.ke");
 
                     return response()->json(['status' => 'received']);
                 }
