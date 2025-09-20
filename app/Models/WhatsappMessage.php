@@ -9,6 +9,6 @@ class WhatsappMessage extends Model
     protected $casts = [
         'timestamp' => 'datetime',
         'conversation_expires_at' => 'datetime',
-        'pricing_billable' => 'boolean'
+        'pricing_billable' => 'boolean',
     ];
 }

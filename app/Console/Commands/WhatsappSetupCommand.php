@@ -34,8 +34,9 @@ class WhatsappSetupCommand extends Command
         $appId = config('whatsapp.app_id');
         $appSecret = config('whatsapp.app_secret');
 
-        if (!$appId || !$appSecret) {
+        if (! $appId || ! $appSecret) {
             $this->error('Please set your WHATSAPP_APP_ID and WHATSAPP_APP_SECRET in the .env file first.');
+
             return 1;
         }
 
@@ -48,8 +49,9 @@ class WhatsappSetupCommand extends Command
 
         $shortLivedToken = $this->ask('2. Enter the short-lived access token you got from the Graph API Explorer');
 
-        if (!$shortLivedToken) {
+        if (! $shortLivedToken) {
             $this->error('Short-lived token is required.');
+
             return 1;
         }
 
@@ -63,12 +65,13 @@ class WhatsappSetupCommand extends Command
         ]);
 
         if ($response->failed()) {
-            $this->error('Failed to exchange token: ' . $response->body());
+            $this->error('Failed to exchange token: '.$response->body());
+
             return 1;
         }
 
         $longLivedToken = $response->json()['access_token'];
-        $this->info('Long-lived token: ' . $longLivedToken);
+        $this->info('Long-lived token: '.$longLivedToken);
         $this->line('');
 
         $this->info('4. Getting page ID...');
@@ -78,13 +81,15 @@ class WhatsappSetupCommand extends Command
         ]);
 
         if ($response->failed()) {
-            $this->error('Failed to get pages: ' . $response->body());
+            $this->error('Failed to get pages: '.$response->body());
+
             return 1;
         }
 
         $pages = $response->json()['data'];
         if (empty($pages)) {
             $this->error('No pages found. Please make sure you have a WhatsApp Business page.');
+
             return 1;
         }
 
@@ -97,17 +102,19 @@ class WhatsappSetupCommand extends Command
 
         $response = Http::get("https://graph.facebook.com/v18.0/{$pageId}/whatsapp_business_accounts", [
             'access_token' => $longLivedToken,
-            'fields' => 'id,name,whatsapp_business_profile'
+            'fields' => 'id,name,whatsapp_business_profile',
         ]);
 
         if ($response->failed()) {
-            $this->error('Failed to get WhatsApp Business Account: ' . $response->body());
+            $this->error('Failed to get WhatsApp Business Account: '.$response->body());
+
             return 1;
         }
 
         $whatsappAccounts = $response->json()['data'];
         if (empty($whatsappAccounts)) {
             $this->error('No WhatsApp Business Accounts found. Please make sure you have set up WhatsApp Business.');
+
             return 1;
         }
 

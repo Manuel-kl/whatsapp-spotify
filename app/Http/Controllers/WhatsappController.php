@@ -2,46 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\WhatsappMessage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class WhatsappController extends Controller
 {
     public function sendMessage(Request $request)
     {
         $validated = $request->validate([
-            'to'    => 'required|string',
-            'body'  => 'required|string',
+            'to' => 'required|string',
+            'body' => 'required|string',
         ]);
 
         $phoneNumberId = config('whatsapp.business_phone_id');
-        $accessToken   = config('whatsapp.access_token');
-        $apiVersion    = config('whatsapp.api_version');
-        $baseUrl       = config('whatsapp.base_url');
+        $accessToken = config('whatsapp.access_token');
+        $apiVersion = config('whatsapp.api_version');
+        $baseUrl = config('whatsapp.base_url');
 
         $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
 
         $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
-            'to'                => $validated['to'],
-            'type'              => 'text',
-            'text'              => [
+            'to' => $validated['to'],
+            'type' => 'text',
+            'text' => [
                 'body' => $validated['body'],
             ],
         ]);
 
         $respJson = $response->json();
 
-        if (!empty($respJson['messages'][0]['id'])) {
+        if (! empty($respJson['messages'][0]['id'])) {
             WhatsappMessage::create([
-                'wamid'     => $respJson['messages'][0]['id'],
-                'from'      => $phoneNumberId,
-                'to'        => $validated['to'],
-                'body'      => $validated['body'],
-                'type'      => 'text',
-                'status'    => null,
+                'wamid' => $respJson['messages'][0]['id'],
+                'from' => $phoneNumberId,
+                'to' => $validated['to'],
+                'body' => $validated['body'],
+                'type' => 'text',
+                'status' => null,
                 'timestamp' => now(),
             ]);
         }
@@ -49,30 +49,44 @@ class WhatsappController extends Controller
         return response()->json($respJson);
     }
 
-
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
 
         if ($request->isMethod('get')) {
-            $mode       = $request->query('hub_mode');
-            $token      = $request->query('hub_verify_token');
-            $challenge  = $request->query('hub_challenge');
+            Log::info('Received GET request on WhatsApp webhook', [
+                'query' => $request->query(),
+            ]);
+            $mode = $request->query('hub_mode');
+            $token = $request->query('hub_verify_token');
+            $challenge = $request->query('hub_challenge');
 
             if ($mode === 'subscribe' && $token === config('whatsapp.verify_token')) {
+                Log::info('Webhook verification successful', [
+                    'mode' => $mode,
+                    'token' => $token,
+                    'challenge' => $challenge,
+                ]);
+
                 return response($challenge, 200);
             }
+
+            Log::warning('Webhook verification failed', [
+                'mode' => $mode,
+                'token' => $token,
+                'config_token' => config('whatsapp.verify_token')
+            ]);
 
             return response('Forbidden', 403);
         }
 
-        if (!$this->isValidMessageWebhook($payload)) {
+        if (! $this->isValidMessageWebhook($payload)) {
             return response()->json(['error' => 'Invalid webhook payload'], 400);
         }
 
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
 
-        if (!empty($value['messages'])) {
+        if (! empty($value['messages'])) {
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
                 if (isset($msg['context']['id'])) {
@@ -82,18 +96,18 @@ class WhatsappController extends Controller
                 WhatsappMessage::updateOrCreate(
                     ['wamid' => $msg['id']],
                     array_merge([
-                        'from'      => $msg['from'] ?? null,
-                        'to'        => $value['metadata']['display_phone_number'] ?? null,
-                        'body'      => $msg['text']['body'] ?? null,
-                        'type'      => $msg['type'] ?? null,
-                        'status'    => null,
+                        'from' => $msg['from'] ?? null,
+                        'to' => $value['metadata']['display_phone_number'] ?? null,
+                        'body' => $msg['text']['body'] ?? null,
+                        'type' => $msg['type'] ?? null,
+                        'status' => null,
                         'timestamp' => isset($msg['timestamp']) ? now()->setTimestamp($msg['timestamp']) : now(),
                     ], $conversationData)
                 );
             }
         }
 
-        if (!empty($value['statuses'])) {
+        if (! empty($value['statuses'])) {
             foreach ($value['statuses'] as $status) {
                 $conversationData = [];
                 if (isset($status['conversation']['id'])) {
@@ -121,7 +135,7 @@ class WhatsappController extends Controller
                 }
 
                 WhatsappMessage::where('wamid', $status['id'])->update(array_merge([
-                    'status'    => $status['status'] ?? null,
+                    'status' => $status['status'] ?? null,
                     'timestamp' => isset($status['timestamp']) ? now()->setTimestamp($status['timestamp']) : now(),
                 ], $conversationData, $pricingData));
             }
@@ -132,7 +146,7 @@ class WhatsappController extends Controller
 
     private function isValidMessageWebhook($payload)
     {
-        if (!isset($payload['object']) || !isset($payload['entry'])) {
+        if (! isset($payload['object']) || ! isset($payload['entry'])) {
             return false;
         }
 
@@ -140,26 +154,26 @@ class WhatsappController extends Controller
             return false;
         }
 
-        if (!is_array($payload['entry']) || empty($payload['entry'])) {
+        if (! is_array($payload['entry']) || empty($payload['entry'])) {
             return false;
         }
 
         $entry = $payload['entry'][0];
-        if (!isset($entry['changes']) || !is_array($entry['changes']) || empty($entry['changes'])) {
+        if (! isset($entry['changes']) || ! is_array($entry['changes']) || empty($entry['changes'])) {
             return false;
         }
 
         $change = $entry['changes'][0];
-        if (!isset($change['value']) || !is_array($change['value'])) {
+        if (! isset($change['value']) || ! is_array($change['value'])) {
             return false;
         }
 
-        if (!isset($change['field']) || $change['field'] !== 'messages') {
+        if (! isset($change['field']) || $change['field'] !== 'messages') {
             return false;
         }
 
         $value = $change['value'];
-        if (!isset($value['messaging_product']) || $value['messaging_product'] !== 'whatsapp') {
+        if (! isset($value['messaging_product']) || $value['messaging_product'] !== 'whatsapp') {
             return false;
         }
 

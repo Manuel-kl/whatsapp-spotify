@@ -35,7 +35,7 @@ return new class extends Migration
                 'pricing_billable',
                 'pricing_pricing_model',
                 'pricing_category',
-                'pricing_type'
+                'pricing_type',
             ]);
         });
     }
