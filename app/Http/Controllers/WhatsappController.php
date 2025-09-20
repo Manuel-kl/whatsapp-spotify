@@ -53,7 +53,7 @@ class WhatsappController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
-
+        logger("webhook received");
         if ($request->isMethod('get')) {
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
@@ -71,8 +71,9 @@ class WhatsappController extends Controller
         }
 
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
-
+        logger("value", $value);
         if (!empty($value['messages'])) {
+            logger("messages", $value['messages']);
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
                 if (isset($msg['context']['id'])) {
@@ -95,6 +96,7 @@ class WhatsappController extends Controller
 
         if (!empty($value['statuses'])) {
             foreach ($value['statuses'] as $status) {
+                logger("status", $status);
                 $conversationData = [];
                 if (isset($status['conversation']['id'])) {
                     $conversationData['conversation_id'] = $status['conversation']['id'];
@@ -126,6 +128,7 @@ class WhatsappController extends Controller
                 ], $conversationData, $pricingData));
             }
         }
+        logger("webhook end");
 
         return response()->json(['status' => 'received']);
     }
