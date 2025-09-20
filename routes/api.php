@@ -14,8 +14,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/sign-out', [AuthController::class, 'logout']);
 
-    Route::any('/whatsapp/webhook', [WhatsappController::class, 'handleWebhook']);
     Route::post('/whatsapp/send-message', [WhatsappController::class, 'sendMessage']);
 
     Route::get('/messages', [MessagesController::class, 'index']);
 });
+Route::any('/whatsapp/webhook', [WhatsappController::class, 'handleWebhook']);
