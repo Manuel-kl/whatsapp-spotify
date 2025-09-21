@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ChatUser;
 use Illuminate\Http\Request;
 use App\Models\WhatsappMessage;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class WhatsappController extends Controller
@@ -41,8 +41,17 @@ class WhatsappController extends Controller
         $respJson = $response->json();
 
         if (!empty($respJson['messages'][0]['id']) && $type === 'message') {
+            $waId = $respJson["contacts"][0]["wa_id"];
+            $chatUser = ChatUser::where('phone', $waId)->first();
+
+            if(!$chatUser){
+                $chatUser = ChatUser::create([
+                    'phone' => $waId,
+                ]);
+            }
+
             WhatsappMessage::create([
-                'user_id' => Auth::user()->id,
+                'chat_user_id' => $chatUser->id,
                 'wamid' => $respJson['messages'][0]['id'],
                 'from' => $phoneNumberId,
                 'to' => $to,
@@ -50,10 +59,6 @@ class WhatsappController extends Controller
                 'type' => 'text',
                 'status' => null,
                 'timestamp' => now(),
-            ]);
-
-            Auth::user()->update([
-                'wa_id' => $respJson['contacts'][0]['wa_id'],
             ]);
         }
 
@@ -81,7 +86,6 @@ class WhatsappController extends Controller
 
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
         if (!empty($value['messages'])) {
-            logger("messages", $value['messages']);
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
 
@@ -91,18 +95,22 @@ class WhatsappController extends Controller
 
                 $from = $msg['from'] ?? null;
 
-                $user = User::where('wa_id', $from)->first();
+                $chatUser = ChatUser::where('phone', $from)->first();
 
-                if(!$user){
-                    $this->sendWhatsAppMessage($from, "Please sign up to continue at https://mcps.east80.co.ke", "signup");
+                if(!$chatUser){
+                    $chatUser = ChatUser::create([
+                        'phone' => $from,
+                    ]);
+                }
 
+                if(!$chatUser){
                     return response()->json(['status' => 'received']);
                 }
 
                 WhatsappMessage::updateOrCreate(
                     ['wamid' => $msg['id']],
                     array_merge([
-                        'user_id' => $user->id,
+                        'chat_user_id' => $chatUser->id,
                         'from' => $msg['from'] ?? null,
                         'to' => $value['metadata']['display_phone_number'] ?? null,
                         'body' => $msg['text']['body'] ?? null,
@@ -116,7 +124,6 @@ class WhatsappController extends Controller
 
         if (!empty($value['statuses'])) {
             foreach ($value['statuses'] as $status) {
-                logger("status", $status);
                 $conversationData = [];
                 if (isset($status['conversation']['id'])) {
                     $conversationData['conversation_id'] = $status['conversation']['id'];

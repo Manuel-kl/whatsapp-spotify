@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('whatsapp_messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('chat_user_id')->constrained('chat_users')->onDelete('cascade');
             $table->string('wamid')->unique();
             $table->string('from')->nullable();
             $table->string('to')->nullable();
