@@ -12,8 +12,8 @@ class WhatsappMessage extends Model
         'pricing_billable' => 'boolean',
     ];
 
-    public function user()
+    public function chatUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(ChatUser::class);
     }
 }
