@@ -59,6 +59,7 @@ class WhatsappController extends Controller
                 'type' => 'text',
                 'status' => null,
                 'timestamp' => now(),
+                'location' => $respJson['messages'][0]['location'] ?? null,
             ]);
         }
 

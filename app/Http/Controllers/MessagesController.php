@@ -9,7 +9,7 @@ class MessagesController extends Controller
 {
     public function index()
     {
-        $chatUsers = ChatUser::all();
+        $chatUsers = ChatUser::with('whatsappMessages')->get();
 
         foreach ($chatUsers as $chatUser) {
             $messages = $chatUser->whatsappMessages;
@@ -21,6 +21,26 @@ class MessagesController extends Controller
         return response()->json([
             'success' => true,
             'data' => $chatUsers,
+        ]);
+    }
+
+    public function chatUsers()
+    {
+        $chatUsers = ChatUser::all();
+
+        return response()->json([
+            'success' => true,
+            'data' => $chatUsers,
+        ]);
+    }
+
+    public function chatUser(ChatUser $chatUser)
+    {
+        $chatUser->load('whatsappMessages');
+
+        return response()->json([
+            'success' => true,
+            'data' => $chatUser,
         ]);
     }
 }

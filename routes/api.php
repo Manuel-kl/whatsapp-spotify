@@ -15,5 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/whatsapp/send-message', [WhatsappController::class, 'sendMessage']);
 
     Route::get('/messages', [MessagesController::class, 'index']);
+    Route::get('/chats', [MessagesController::class, 'chatUsers']);
+    Route::get("/chat/{chatUser}", [MessagesController::class, 'chatUser']);
 });
 Route::any('/whatsapp/webhook', [WhatsappController::class, 'handleWebhook']);
