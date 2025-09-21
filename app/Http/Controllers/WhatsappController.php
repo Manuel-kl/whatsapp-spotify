@@ -17,10 +17,10 @@ class WhatsappController extends Controller
             'body' => 'required|string',
         ]);
 
-        return $this->sendWhatsAppMessage($validated['to'], $validated['body'], "message");
+        return $this->sendWhatsAppMessage($validated['to'], $validated['body'], 'message');
     }
 
-    private function sendWhatsAppMessage($to, $body, $type)
+    private function sendWhatsAppMessage($to, $body, $type = 'message')
     {
         $phoneNumberId = config('whatsapp.business_phone_id');
         $accessToken = config('whatsapp.access_token');
@@ -29,38 +29,14 @@ class WhatsappController extends Controller
 
         $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
 
-        $messageData = [
+        $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
             'to' => $to,
-        ];
-
-        if ($type === 'message') {
-            $messageData['type'] = 'text';
-            $messageData['text'] = [
+            'type' => 'text',
+            'text' => [
                 'body' => $body,
-            ];
-        } else {
-            $messageData['type'] = 'interactive';
-            $messageData['interactive'] = [
-                'type' => 'button',
-                'body' => [
-                    'text' => 'Welcome! Please sign up to continue using our service.'
-                ],
-                'action' => [
-                    'buttons' => [
-                        [
-                            'type' => 'reply',
-                            'reply' => [
-                                'id' => 'signup_button',
-                                'title' => 'Sign Up Now'
-                            ]
-                        ]
-                    ]
-                ]
-            ];
-        }
-
-        $response = Http::withToken($accessToken)->post($endpoint, $messageData);
+            ],
+        ]);
 
         $respJson = $response->json();
 
@@ -104,7 +80,6 @@ class WhatsappController extends Controller
         }
 
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
-        logger("value", $value);
         if (!empty($value['messages'])) {
             logger("messages", $value['messages']);
             foreach ($value['messages'] as $msg) {
@@ -116,15 +91,10 @@ class WhatsappController extends Controller
 
                 $from = $msg['from'] ?? null;
 
-                if (isset($msg['interactive']['button_reply']['id']) && $msg['interactive']['button_reply']['id'] === 'signup_button') {
-                    $this->sendWhatsAppMessage($from, "Please sign up here: https://mcps.east80.co.ke", "message");
-                    return response()->json(['status' => 'received']);
-                }
-
                 $user = User::where('wa_id', $from)->first();
 
                 if(!$user){
-                    $this->sendWhatsAppMessage($from, "Please sign up to continue", "signup");
+                    $this->sendWhatsAppMessage($from, "Please sign up to continue at https://mcps.east80.co.ke", "signup");
 
                     return response()->json(['status' => 'received']);
                 }
@@ -178,7 +148,6 @@ class WhatsappController extends Controller
                 ], $conversationData, $pricingData));
             }
         }
-        logger("webhook end");
 
         return response()->json(['status' => 'received']);
     }
