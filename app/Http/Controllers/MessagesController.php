@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatUser;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class MessagesController extends Controller
 {
@@ -40,6 +40,27 @@ class MessagesController extends Controller
 
         return response()->json([
             'success' => true,
+            'data' => $chatUser,
+        ]);
+    }
+
+    public function updateChatUser(ChatUser $chatUser, Request $request)
+    {
+        $name = $request->input('name');
+
+        if(!$name){
+            return response()->json([
+                'success' => false,
+                'message' => 'Name is required',
+            ], 400);
+        }
+
+        $chatUser->name = $name;
+        $chatUser->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Chat user updated successfully',
             'data' => $chatUser,
         ]);
     }
