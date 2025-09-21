@@ -83,7 +83,7 @@ class WhatsappController extends Controller
         if (!$this->isValidMessageWebhook($payload)) {
             return response()->json(['error' => 'Invalid webhook payload'], 400);
         }
-
+        logger("webhook payload", $payload);
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
         if (!empty($value['messages'])) {
             foreach ($value['messages'] as $msg) {
