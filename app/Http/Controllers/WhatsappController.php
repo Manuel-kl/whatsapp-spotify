@@ -149,6 +149,8 @@ class WhatsappController extends Controller
                 }
 
                 if (!$chatUser) {
+                    logger('chatUser not created');
+                    logger('from', $from);
                     return response()->json(['status' => 'received']);
                 }
 
