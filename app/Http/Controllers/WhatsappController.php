@@ -131,6 +131,7 @@ class WhatsappController extends Controller
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
 
         if (!empty($value['messages'])) {
+            logger('value messages', $value['messages']);
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
 
@@ -177,6 +178,7 @@ class WhatsappController extends Controller
         }
 
         if (!empty($value['statuses'])) {
+            logger('value statuses', $value['statuses']);
             foreach ($value['statuses'] as $status) {
                 $conversationData = [];
                 if (isset($status['conversation']['id'])) {
