@@ -3,6 +3,7 @@
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\Spotify\AccountController;
 use App\Http\Controllers\Spotify\PlaylistController;
 use App\Http\Controllers\Spotify\TrackController;
 use App\Http\Controllers\SpotifyController;
@@ -29,8 +30,8 @@ Route::post('/ai/mood', [AiController::class, 'getMood']);
 Route::post('/ai/brutal-boss', [AiController::class, 'sendBrutalBossMessage']);
 
 // Route::get('/spotify/test-token', [SpotifyController::class, 'testToken']);
-Route::get('/spotify/connection-status', [SpotifyController::class, 'checkConnection']);
-Route::get('/spotify/user-profile', [SpotifyController::class, 'getUserProfile']);
+Route::get('/spotify/connection-status', [AccountController::class, 'checkConnection']);
+Route::get('/spotify/user-profile', [AccountController::class, 'getUserProfile']);
 
 // playlists
 Route::get('/spotify/playlists', [PlaylistController::class, 'playlists']);
