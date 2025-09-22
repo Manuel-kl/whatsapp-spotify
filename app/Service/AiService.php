@@ -43,7 +43,16 @@ class AiService
 
         foreach ($messageHistory as $msg) {
             $sender = $this->identifyMessageSender($msg);
-            $timestamp = $msg['timestamp'] ? $msg['timestamp']->format('Y-m-d H:i:s') : 'Unknown time';
+
+            $timestamp = 'Unknown time';
+            if (isset($msg['timestamp']) && $msg['timestamp']) {
+                try {
+                    $timestamp = \Carbon\Carbon::parse($msg['timestamp'])->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    $timestamp = 'Unknown time';
+                }
+            }
+
             $formattedHistory .= "[$timestamp] $sender: {$msg['body']}\n";
         }
 
