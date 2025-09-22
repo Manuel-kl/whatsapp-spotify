@@ -42,7 +42,7 @@ class SpotifyController extends Controller
             $this->spotifyService->refreshAccessToken($spotifyToken->refresh_token);
         }
 
-        return view('dashboard');
+        return view('dashboard', compact('spotifyToken'));
     }
 
     public function redirectToSpotify()

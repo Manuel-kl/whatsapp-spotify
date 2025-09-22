@@ -32,6 +32,7 @@ Route::post('/ai/brutal-boss', [AiController::class, 'sendBrutalBossMessage']);
 // Route::get('/spotify/test-token', [SpotifyController::class, 'testToken']);
 Route::get('/spotify/connection-status', [AccountController::class, 'checkConnection']);
 Route::get('/spotify/user-profile', [AccountController::class, 'getUserProfile']);
+Route::post('/spotify/disconnect', [AccountController::class, 'disconnect']);
 
 // playlists
 Route::get('/spotify/playlists', [PlaylistController::class, 'playlists']);

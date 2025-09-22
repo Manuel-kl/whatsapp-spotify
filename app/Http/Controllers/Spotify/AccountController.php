@@ -43,9 +43,19 @@ class AccountController extends Controller
 
     public function disconnect()
     {
-        SpotifyToken::truncate();
+        $spotifyToken = SpotifyToken::first();
 
-        return redirect()->route('dashboard')->with('success', 'Spotify account disconnected successfully');
+        if (!$spotifyToken) {
+            return response()->json([
+                'message' => 'No Spotify access token found',
+            ]);
+        }
+
+        $spotifyToken->delete();
+
+        return response()->json([
+            'message' => 'Spotify account disconnected successfully',
+        ]);
     }
 
     public function getUserProfile()

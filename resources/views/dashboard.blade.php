@@ -38,29 +38,19 @@
                                         <i class="fab fa-spotify"></i> Spotify Integration
                                     </div>
                                     <div class="card-body">
-                                        @if(session('spotify_access_token'))
-                                            <p class="text-success">
-                                                <i class="fas fa-check-circle"></i>
-                                                Connected to Spotify!
-                                            </p>
-                                            <p class="text-muted small">
-                                                Token expires: {{ session('spotify_token_expires_at') }}
-                                            </p>
-                                            <form action="{{ route('spotify.disconnect') }}" method="POST" class="mt-2">
-                                                @csrf
-                                                <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                    <i class="fas fa-unlink"></i> Disconnect
-                                                </button>
-                                            </form>
-                                        @else
-                                            <p class="text-warning">
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                                Not connected to Spotify
-                                            </p>
-                                            <a href="{{ route('spotify.authorize') }}" class="btn btn-success">
-                                                <i class="fab fa-spotify"></i> Connect Spotify
-                                            </a>
-                                        @endif
+                                        <p class="text-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            Connected to Spotify!
+                                        </p>
+                                        <p class="text-muted small">
+                                            Token expires: {{ $spotifyToken->expires_at }}
+                                        </p>
+                                        <form action="/api/spotify/disconnect" method="POST" class="mt-2">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-unlink"></i> Disconnect
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -93,11 +83,9 @@
                                 <a href="/api/spotify/connection-status" class="btn btn-outline-info" target="_blank">
                                     <i class="fas fa-link"></i> Check Connection
                                 </a>
-                                @if(session('spotify_access_token'))
                                 <a href="/api/spotify/user-profile" class="btn btn-outline-primary" target="_blank">
                                     <i class="fas fa-user"></i> Get Profile
                                 </a>
-                                @endif
                             </div>
                         </div>
 
