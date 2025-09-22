@@ -72,8 +72,9 @@ class SpotifyController extends Controller
         if ($spotifyToken->expires_at < now()) {
             try {
                 $this->spotifyService->refreshAccessToken($spotifyToken->refresh_token);
+                $spotifyToken = $spotifyToken->fresh();
 
-                return view('dashboard');
+                return view('dashboard', compact('spotifyToken'));
             } catch (\Exception $e) {
                 return view('spotify.connect', compact('authUrl'));
             }
