@@ -166,6 +166,8 @@ class WhatsappController extends Controller
                 );
 
                 $autoReplyPhone = config('whatsapp.auto_reply_phone');
+                logger('autoReplyPhone', $autoReplyPhone);
+                logger('from', $from);
                 if ($autoReplyPhone && $from === $autoReplyPhone) {
                     $this->processAutoReply($msg, $from);
                 }
