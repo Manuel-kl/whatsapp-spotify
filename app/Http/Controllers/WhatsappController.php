@@ -172,6 +172,7 @@ class WhatsappController extends Controller
                 logger('autoReplyPhone', ['autoReplyPhone' => $autoReplyPhone]);
                 logger('from', ['from' => $from]);
                 if ($autoReplyPhone && $from === $autoReplyPhone) {
+                    logger('processing auto reply');
                     $this->processAutoReply($msg, $from);
                 }
             }
@@ -217,16 +218,20 @@ class WhatsappController extends Controller
 
     private function processAutoReply($msg, $from)
     {
+        logger('processing auto reply', ['msg' => $msg, 'from' => $from]);
         if ($msg['type'] === 'interactive') {
+            logger('processing interactive');
             $this->handleButtonInteraction($msg, $from);
             return;
         }
 
         if ($msg['type'] === 'text' && !empty($msg['text']['body'])) {
+            logger('processing text');
             $aiController = app(AiController::class);
             $hasPlaylistIntent = $aiController->detectPlaylistIntent($msg['text']['body']);
 
             if ($hasPlaylistIntent) {
+                logger('has playlist intent');
                 $this->sendInteractiveButton(
                     $from,
                     "I detected you might want a playlist! Would you like me to create one based on your message?",
