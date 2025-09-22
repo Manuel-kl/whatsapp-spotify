@@ -8,4 +8,5 @@ return [
     'api_version' => env('WHATSAPP_API_VERSION', 'v18.0'),
     'base_url' => 'https://graph.facebook.com/',
     'verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN', null),
+    'auto_reply_phone' => env('WHATSAPP_AUTO_REPLY_PHONE', null),
 ];

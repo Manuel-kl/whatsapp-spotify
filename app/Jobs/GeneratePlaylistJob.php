@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\Spotify\PlaylistController;
 use App\Http\Controllers\Spotify\TrackController;
+use App\Http\Controllers\WhatsappController;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,7 +23,7 @@ class GeneratePlaylistJob implements ShouldQueue
 
     public $tries = 3;
 
-    protected string $jobId;
+    protected ?string $jobId;
 
     protected string $activity;
 
@@ -34,16 +35,20 @@ class GeneratePlaylistJob implements ShouldQueue
 
     protected ?int $userId;
 
+    protected ?string $whatsappPhone;
+
     public function __construct(
-        string $jobId,
         string $activity,
+        ?string $whatsappPhone = null,
+        ?string $jobId = null,
         ?string $playlistName = null,
         ?string $playlistDescription = null,
         bool $isPublic = false,
         ?int $userId = null
     ) {
-        $this->jobId = $jobId;
         $this->activity = $activity;
+        $this->whatsappPhone = $whatsappPhone;
+        $this->jobId = $jobId ?? uniqid('playlist_', true);
         $this->playlistName = $playlistName;
         $this->playlistDescription = $playlistDescription;
         $this->isPublic = $isPublic;
@@ -143,6 +148,10 @@ class GeneratePlaylistJob implements ShouldQueue
 
             $this->updateProgress('completed', 100, 'Playlist created successfully!', $result);
 
+            if ($this->whatsappPhone) {
+                $this->sendWhatsAppNotification($result);
+            }
+
         } catch (\Exception $e) {
             Log::error('Playlist generation failed', [
                 'job_id' => $this->jobId,
@@ -155,7 +164,46 @@ class GeneratePlaylistJob implements ShouldQueue
                 'code' => $e->getCode(),
             ]);
 
+            if ($this->whatsappPhone) {
+                $this->sendWhatsAppErrorNotification($e->getMessage());
+            }
+
             throw $e;
+        }
+    }
+
+    private function sendWhatsAppNotification(array $result): void
+    {
+        try {
+            $whatsappController = app(WhatsappController::class);
+            $playlist = $result['playlist'];
+
+            $message = "🎵 Your playlist is ready!\n\n";
+            $message .= "**{$playlist['name']}**\n";
+            $message .= "📊 {$playlist['tracks_added']} tracks added\n";
+            $message .= "🎧 Listen here: {$playlist['url']}";
+
+            $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'playlist_notification');
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp notification', [
+                'phone' => $this->whatsappPhone,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendWhatsAppErrorNotification(string $errorMessage): void
+    {
+        try {
+            $whatsappController = app(WhatsappController::class);
+            $message = "❌ Sorry, I couldn't create your playlist.\n\nError: {$errorMessage}\n\nPlease try again later.";
+
+            $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'error_notification');
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp error notification', [
+                'phone' => $this->whatsappPhone,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -186,5 +234,9 @@ class GeneratePlaylistJob implements ShouldQueue
             'error' => $exception->getMessage(),
             'code' => $exception->getCode(),
         ]);
+
+        if ($this->whatsappPhone) {
+            $this->sendWhatsAppErrorNotification($exception->getMessage());
+        }
     }
 }

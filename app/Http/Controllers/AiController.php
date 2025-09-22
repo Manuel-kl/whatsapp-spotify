@@ -133,6 +133,17 @@ class AiController extends Controller
         return trim($name->text);
     }
 
+    public function detectPlaylistIntent(string $message): bool
+    {
+        $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
+        $systemPrompt = $prompts['intentDetector']['system'];
+
+        $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+        $intent = trim(strtoupper($response->text));
+
+        return $intent === 'YES';
+    }
+
     public function sendBrutalBossMessage(Request $request)
     {
         $validated = $request->validate([

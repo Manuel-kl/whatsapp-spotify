@@ -6,6 +6,8 @@ use App\Models\ChatUser;
 use App\Models\WhatsappMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\AiController;
+use App\Jobs\GeneratePlaylistJob;
 
 class WhatsappController extends Controller
 {
@@ -19,7 +21,7 @@ class WhatsappController extends Controller
         return $this->sendWhatsAppMessage($validated['to'], $validated['body'], 'message');
     }
 
-    private function sendWhatsAppMessage($to, $body, $type = 'message')
+    public function sendWhatsAppMessage($to, $body, $type = 'message')
     {
         $phoneNumberId = config('whatsapp.business_phone_id');
         $accessToken = config('whatsapp.access_token');
@@ -65,6 +67,48 @@ class WhatsappController extends Controller
         return response()->json($respJson);
     }
 
+    public function sendInteractiveButton($to, $message, $activity)
+    {
+        $phoneNumberId = config('whatsapp.business_phone_id');
+        $accessToken = config('whatsapp.access_token');
+        $apiVersion = config('whatsapp.api_version');
+        $baseUrl = config('whatsapp.base_url');
+
+        $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
+
+        $response = Http::withToken($accessToken)->post($endpoint, [
+            'messaging_product' => 'whatsapp',
+            'to' => $to,
+            'type' => 'interactive',
+            'interactive' => [
+                'type' => 'button',
+                'body' => [
+                    'text' => $message
+                ],
+                'action' => [
+                    'buttons' => [
+                        [
+                            'type' => 'reply',
+                            'reply' => [
+                                'id' => 'generate_playlist_yes_' . base64_encode($activity),
+                                'title' => 'Yes ✅'
+                            ]
+                        ],
+                        [
+                            'type' => 'reply',
+                            'reply' => [
+                                'id' => 'generate_playlist_no',
+                                'title' => 'No ❌'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        return $response->json();
+    }
+
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
@@ -85,6 +129,7 @@ class WhatsappController extends Controller
         }
         logger('webhook payload', $payload);
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
+
         if (!empty($value['messages'])) {
             foreach ($value['messages'] as $msg) {
                 $conversationData = [];
@@ -119,6 +164,11 @@ class WhatsappController extends Controller
                         'timestamp' => isset($msg['timestamp']) ? now()->setTimestamp($msg['timestamp']) : now(),
                     ], $conversationData)
                 );
+
+                $autoReplyPhone = config('whatsapp.auto_reply_phone');
+                if ($autoReplyPhone && $from === $autoReplyPhone) {
+                    $this->processAutoReply($msg, $from);
+                }
             }
         }
 
@@ -157,6 +207,44 @@ class WhatsappController extends Controller
         }
 
         return response()->json(['status' => 'received']);
+    }
+
+    private function processAutoReply($msg, $from)
+    {
+        if ($msg['type'] === 'interactive') {
+            $this->handleButtonInteraction($msg, $from);
+            return;
+        }
+
+        if ($msg['type'] === 'text' && !empty($msg['text']['body'])) {
+            $aiController = app(AiController::class);
+            $hasPlaylistIntent = $aiController->detectPlaylistIntent($msg['text']['body']);
+
+            if ($hasPlaylistIntent) {
+                $this->sendInteractiveButton(
+                    $from,
+                    "I detected you might want a playlist! Would you like me to create one based on your message?",
+                    $msg['text']['body']
+                );
+            }
+        }
+    }
+
+    private function handleButtonInteraction($msg, $from)
+    {
+        $buttonId = $msg['interactive']['button_reply']['id'] ?? '';
+
+        if (strpos($buttonId, 'generate_playlist_yes_') === 0) {
+            $activityEncoded = str_replace('generate_playlist_yes_', '', $buttonId);
+            $activity = base64_decode($activityEncoded);
+
+            GeneratePlaylistJob::dispatch($from, $activity);
+
+            $this->sendWhatsAppMessage($from, "Perfect! I'm generating your playlist now. This might take a moment... 🎵", 'auto_reply');
+
+        } elseif ($buttonId === 'generate_playlist_no') {
+            $this->sendWhatsAppMessage($from, "No problem! Let me know if you need anything else.", 'auto_reply');
+        }
     }
 
     private function isValidMessageWebhook($payload)
