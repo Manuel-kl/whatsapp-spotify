@@ -151,7 +151,7 @@ class WhatsappController extends Controller
 
                 if (!$chatUser) {
                     logger('chatUser not created');
-                    logger('from', $from);
+                    logger('from', ['from' => $from]);
                     return response()->json(['status' => 'received']);
                 }
 
@@ -169,8 +169,8 @@ class WhatsappController extends Controller
                 );
 
                 $autoReplyPhone = config('whatsapp.auto_reply_phone');
-                logger('autoReplyPhone', $autoReplyPhone);
-                logger('from', $from);
+                logger('autoReplyPhone', ['autoReplyPhone' => $autoReplyPhone]);
+                logger('from', ['from' => $from]);
                 if ($autoReplyPhone && $from === $autoReplyPhone) {
                     $this->processAutoReply($msg, $from);
                 }
