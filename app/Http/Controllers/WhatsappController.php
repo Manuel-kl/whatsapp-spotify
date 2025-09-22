@@ -237,6 +237,11 @@ class WhatsappController extends Controller
                     "I detected you might want a playlist! Would you like me to create one based on your message?",
                     $msg['text']['body']
                 );
+            } else {
+                // normal chat response conversation
+                logger('normal chat response conversation');
+                $conversationalResponse = $aiController->generateConversationalResponse($msg['text']['body']);
+                $this->sendWhatsAppMessage($from, $conversationalResponse, 'auto_reply');
             }
         }
     }

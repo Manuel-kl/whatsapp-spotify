@@ -144,6 +144,16 @@ class AiController extends Controller
         return $intent === 'YES';
     }
 
+    public function generateConversationalResponse(string $message): string
+    {
+        $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
+        $systemPrompt = $prompts['conversational']['system'];
+
+        $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+
+        return trim($response->text);
+    }
+
     public function sendBrutalBossMessage(Request $request)
     {
         $validated = $request->validate([
