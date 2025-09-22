@@ -19,8 +19,8 @@ class SpotifyService
 
     public function __construct()
     {
-        $this->clientId = config('services.spotify.client_id');
-        $this->clientSecret = config('services.spotify.client_secret');
+        $this->clientId = config('services.spotify.client_id') ?? throw new \Exception('Spotify client ID is not configured. Please set SPOTIFY_CLIENT_ID in your .env file.');
+        $this->clientSecret = config('services.spotify.client_secret') ?? throw new \Exception('Spotify client secret is not configured. Please set SPOTIFY_CLIENT_SECRET in your .env file.');
         $this->redirectUri = config('services.spotify.redirect', url('/spotify/callback'));
     }
 

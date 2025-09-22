@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Spotify\PlaylistController;
 use App\Service\AiService;
+use App\Models\WhatsappMessage;
+use App\Models\ChatUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -133,25 +135,55 @@ class AiController extends Controller
         return trim($name->text);
     }
 
-    public function detectPlaylistIntent(string $message): bool
+    public function detectPlaylistIntent(string $message, string $userPhone = null): bool
     {
         $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
         $systemPrompt = $prompts['intentDetector']['system'];
 
-        $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+        if ($userPhone) {
+            $messageHistory = $this->getMessageHistoryForUser($userPhone);
+            $response = $this->aiService->sendAiRequestWithHistory($message, $systemPrompt, $messageHistory);
+        } else {
+            $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+        }
+
         $intent = trim(strtoupper($response->text));
 
         return $intent === 'YES';
     }
 
-    public function generateConversationalResponse(string $message): string
+    public function generateConversationalResponse(string $message, string $userPhone = null): string
     {
         $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
         $systemPrompt = $prompts['conversational']['system'];
 
-        $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+        if ($userPhone) {
+            $messageHistory = $this->getMessageHistoryForUser($userPhone);
+            $response = $this->aiService->sendAiRequestWithHistory($message, $systemPrompt, $messageHistory);
+        } else {
+            $response = $this->aiService->sendAiRequest($message, $systemPrompt);
+        }
 
         return trim($response->text);
+    }
+
+    public function getMessageHistoryForUser(string $userPhone, int $limit = 20): array
+    {
+        $chatUser = ChatUser::where('phone', $userPhone)->first();
+
+        if (!$chatUser) {
+            return [];
+        }
+
+        $messages = WhatsappMessage::where('chat_user_id', $chatUser->id)
+            ->whereNotNull('body')
+            ->orderBy('timestamp', 'desc')
+            ->limit($limit)
+            ->get()
+            ->reverse()
+            ->toArray();
+
+        return $messages;
     }
 
     public function sendBrutalBossMessage(Request $request)

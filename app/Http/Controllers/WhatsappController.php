@@ -228,7 +228,7 @@ class WhatsappController extends Controller
         if ($msg['type'] === 'text' && !empty($msg['text']['body'])) {
             logger('processing text');
             $aiController = app(AiController::class);
-            $hasPlaylistIntent = $aiController->detectPlaylistIntent($msg['text']['body']);
+            $hasPlaylistIntent = $aiController->detectPlaylistIntent($msg['text']['body'], $from);
 
             if ($hasPlaylistIntent) {
                 logger('has playlist intent');
@@ -240,7 +240,7 @@ class WhatsappController extends Controller
             } else {
                 // normal chat response conversation
                 logger('normal chat response conversation');
-                $conversationalResponse = $aiController->generateConversationalResponse($msg['text']['body']);
+                $conversationalResponse = $aiController->generateConversationalResponse($msg['text']['body'], $from);
                 $this->sendWhatsAppMessage($from, $conversationalResponse, 'auto_reply');
             }
         }
