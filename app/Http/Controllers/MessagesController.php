@@ -48,7 +48,7 @@ class MessagesController extends Controller
     {
         $name = $request->input('name');
 
-        if(!$name){
+        if (!$name) {
             return response()->json([
                 'success' => false,
                 'message' => 'Name is required',

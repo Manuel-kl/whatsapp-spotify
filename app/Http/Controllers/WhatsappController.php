@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\ChatUser;
-use Illuminate\Http\Request;
 use App\Models\WhatsappMessage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class WhatsappController extends Controller
@@ -41,10 +40,10 @@ class WhatsappController extends Controller
         $respJson = $response->json();
 
         if (!empty($respJson['messages'][0]['id']) && $type === 'message') {
-            $waId = $respJson["contacts"][0]["wa_id"];
+            $waId = $respJson['contacts'][0]['wa_id'];
             $chatUser = ChatUser::where('phone', $waId)->first();
 
-            if(!$chatUser){
+            if (!$chatUser) {
                 $chatUser = ChatUser::create([
                     'phone' => $waId,
                 ]);
@@ -84,7 +83,7 @@ class WhatsappController extends Controller
         if (!$this->isValidMessageWebhook($payload)) {
             return response()->json(['error' => 'Invalid webhook payload'], 400);
         }
-        logger("webhook payload", $payload);
+        logger('webhook payload', $payload);
         $value = $payload['entry'][0]['changes'][0]['value'] ?? [];
         if (!empty($value['messages'])) {
             foreach ($value['messages'] as $msg) {
@@ -98,13 +97,13 @@ class WhatsappController extends Controller
 
                 $chatUser = ChatUser::where('phone', $from)->first();
 
-                if(!$chatUser){
+                if (!$chatUser) {
                     $chatUser = ChatUser::create([
                         'phone' => $from,
                     ]);
                 }
 
-                if(!$chatUser){
+                if (!$chatUser) {
                     return response()->json(['status' => 'received']);
                 }
 
