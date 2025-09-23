@@ -30,6 +30,15 @@ class WhatsappController extends Controller
 
         $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
 
+        logger('Sending WhatsApp message', [
+            'to' => $to,
+            'body' => $body,
+            'type' => $type,
+            'endpoint' => $endpoint,
+            'phone_id' => $phoneNumberId,
+            'has_token' => !empty($accessToken)
+        ]);
+
         $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
             'to' => $to,
@@ -40,6 +49,12 @@ class WhatsappController extends Controller
         ]);
 
         $respJson = $response->json();
+
+        logger('WhatsApp API response', [
+            'status' => $response->status(),
+            'response' => $respJson,
+            'success' => $response->successful()
+        ]);
 
         if (!empty($respJson['messages'][0]['id']) && $type === 'message') {
             $waId = $respJson['contacts'][0]['wa_id'];
@@ -76,6 +91,15 @@ class WhatsappController extends Controller
 
         $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
 
+        logger('Sending WhatsApp interactive message', [
+            'to' => $to,
+            'message' => $message,
+            'activity' => $activity,
+            'endpoint' => $endpoint,
+            'phone_id' => $phoneNumberId,
+            'has_token' => !empty($accessToken)
+        ]);
+
         $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
             'to' => $to,
@@ -106,7 +130,38 @@ class WhatsappController extends Controller
             ]
         ]);
 
-        return $response->json();
+        $respJson = $response->json();
+
+        logger('WhatsApp Interactive API response', [
+            'status' => $response->status(),
+            'response' => $respJson,
+            'success' => $response->successful()
+        ]);
+
+        if (!empty($respJson['messages'][0]['id'])) {
+            $waId = $respJson['contacts'][0]['wa_id'];
+            $chatUser = ChatUser::where('phone', $waId)->first();
+
+            if (!$chatUser) {
+                $chatUser = ChatUser::create([
+                    'phone' => $waId,
+                ]);
+            }
+
+            WhatsappMessage::create([
+                'chat_user_id' => $chatUser->id,
+                'wamid' => $respJson['messages'][0]['id'],
+                'from' => $phoneNumberId,
+                'to' => $to,
+                'body' => $message,
+                'type' => 'interactive',
+                'status' => null,
+                'timestamp' => now(),
+                'location' => null,
+            ]);
+        }
+
+        return $respJson;
     }
 
     public function handleWebhook(Request $request)
@@ -161,7 +216,7 @@ class WhatsappController extends Controller
                         'chat_user_id' => $chatUser->id,
                         'from' => $msg['from'] ?? null,
                         'to' => $value['metadata']['display_phone_number'] ?? null,
-                        'body' => $msg['text']['body'] ?? null,
+                        'body' => $this->extractMessageBody($msg),
                         'type' => $msg['type'] ?? null,
                         'status' => null,
                         'timestamp' => isset($msg['timestamp']) ? now()->setTimestamp($msg['timestamp']) : now(),
@@ -232,9 +287,11 @@ class WhatsappController extends Controller
 
             if ($hasPlaylistIntent) {
                 logger('has playlist intent');
+                $playlistSuggestionMessage = $aiController->generatePlaylistSuggestionMessage($msg['text']['body'], $from);
+
                 $this->sendInteractiveButton(
                     $from,
-                    "I detected you might want a playlist! Would you like me to create one based on your message?",
+                    $playlistSuggestionMessage,
                     $msg['text']['body']
                 );
             } else {
@@ -254,13 +311,27 @@ class WhatsappController extends Controller
             $activityEncoded = str_replace('generate_playlist_yes_', '', $buttonId);
             $activity = base64_decode($activityEncoded);
 
-            GeneratePlaylistJob::dispatch($from, $activity);
+            GeneratePlaylistJob::dispatch($activity, $from);
 
             $this->sendWhatsAppMessage($from, "Perfect! I'm generating your playlist now. This might take a moment... 🎵", 'auto_reply');
 
         } elseif ($buttonId === 'generate_playlist_no') {
             $this->sendWhatsAppMessage($from, "No problem! Let me know if you need anything else.", 'auto_reply');
         }
+    }
+
+    private function extractMessageBody($msg)
+    {
+        if ($msg['type'] === 'text' && !empty($msg['text']['body'])) {
+            return $msg['text']['body'];
+        }
+
+        if ($msg['type'] === 'interactive' && !empty($msg['interactive']['button_reply'])) {
+            $buttonReply = $msg['interactive']['button_reply'];
+            return "Button clicked: " . ($buttonReply['title'] ?? '') . " (ID: " . ($buttonReply['id'] ?? '') . ")";
+        }
+
+        return null;
     }
 
     private function isValidMessageWebhook($payload)

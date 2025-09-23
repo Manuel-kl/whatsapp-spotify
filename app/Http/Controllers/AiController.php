@@ -167,6 +167,21 @@ class AiController extends Controller
         return trim($response->text);
     }
 
+    public function generatePlaylistSuggestionMessage(string $userActivity, string $userPhone = null): string
+    {
+        $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
+        $systemPrompt = $prompts['playlistSuggestion']['system'];
+
+        if ($userPhone) {
+            $messageHistory = $this->getMessageHistoryForUser($userPhone);
+            $response = $this->aiService->sendAiRequestWithHistory($userActivity, $systemPrompt, $messageHistory);
+        } else {
+            $response = $this->aiService->sendAiRequest($userActivity, $systemPrompt);
+        }
+
+        return trim($response->text);
+    }
+
     public function getMessageHistoryForUser(string $userPhone, int $limit = 20): array
     {
         $chatUser = ChatUser::where('phone', $userPhone)->first();
@@ -192,7 +207,7 @@ class AiController extends Controller
             'to' => 'required|string',
         ]);
 
-        $testNumber = $validated['to'] ?? '1234567890';
+        $testNumber = $validated['to'];
 
         $prompts = json_decode(file_get_contents(resource_path('prompts/ai_prompts.json')), true);
         $systemPrompt = $prompts['brutalBoss']['system'];
@@ -200,24 +215,12 @@ class AiController extends Controller
         $aiResponse = $this->aiService->sendAiRequest($userMessage, $systemPrompt);
         $brutalMessage = trim($aiResponse->text);
 
-        $phoneNumberId = config('whatsapp.business_phone_id');
-        $accessToken = config('whatsapp.access_token');
-        $apiVersion = config('whatsapp.api_version');
-        $baseUrl = config('whatsapp.base_url');
-        $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
-
-        $response = Http::withToken($accessToken)->post($endpoint, [
-            'messaging_product' => 'whatsapp',
-            'to' => $testNumber,
-            'type' => 'text',
-            'text' => [
-                'body' => $brutalMessage,
-            ],
-        ]);
+        $whatsappController = app(WhatsappController::class);
+        $response = $whatsappController->sendWhatsAppMessage($testNumber, $brutalMessage, 'brutal_boss');
 
         return response()->json([
             'message' => $brutalMessage,
-            'whatsapp_response' => $response->json(),
+            'whatsapp_response' => $response->getData(),
             'sent_to' => $testNumber,
         ]);
     }

@@ -159,8 +159,9 @@ class PlaylistController extends Controller
             ], 3600);
 
             GeneratePlaylistJob::dispatch(
-                $jobId,
                 $request->activity,
+                null,
+                $jobId,
                 $request->playlist_name,
                 $request->playlist_description,
                 $request->boolean('public', false),

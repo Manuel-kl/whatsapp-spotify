@@ -175,6 +175,12 @@ class GeneratePlaylistJob implements ShouldQueue
     private function sendWhatsAppNotification(array $result): void
     {
         try {
+            logger('Attempting to send WhatsApp notification', [
+                'phone' => $this->whatsappPhone,
+                'has_phone' => !empty($this->whatsappPhone),
+                'playlist_id' => $result['playlist']['id'] ?? 'unknown'
+            ]);
+
             $whatsappController = app(WhatsappController::class);
             $playlist = $result['playlist'];
 
@@ -183,11 +189,17 @@ class GeneratePlaylistJob implements ShouldQueue
             $message .= "📊 {$playlist['tracks_added']} tracks added\n";
             $message .= "🎧 Listen here: {$playlist['url']}";
 
-            $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'playlist_notification');
+            $response = $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'playlist_notification');
+
+            logger('WhatsApp notification sent', [
+                'phone' => $this->whatsappPhone,
+                'response_status' => $response->getStatusCode()
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to send WhatsApp notification', [
                 'phone' => $this->whatsappPhone,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
@@ -195,14 +207,26 @@ class GeneratePlaylistJob implements ShouldQueue
     private function sendWhatsAppErrorNotification(string $errorMessage): void
     {
         try {
+            logger('Attempting to send WhatsApp error notification', [
+                'phone' => $this->whatsappPhone,
+                'has_phone' => !empty($this->whatsappPhone),
+                'error' => $errorMessage
+            ]);
+
             $whatsappController = app(WhatsappController::class);
             $message = "❌ Sorry, I couldn't create your playlist.\n\nError: {$errorMessage}\n\nPlease try again later.";
 
-            $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'error_notification');
+            $response = $whatsappController->sendWhatsAppMessage($this->whatsappPhone, $message, 'error_notification');
+
+            logger('WhatsApp error notification sent', [
+                'phone' => $this->whatsappPhone,
+                'response_status' => $response->getStatusCode()
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to send WhatsApp error notification', [
                 'phone' => $this->whatsappPhone,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
