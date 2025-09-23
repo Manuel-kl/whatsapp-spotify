@@ -16,18 +16,17 @@ Route::post('/sign-in', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/sign-out', [AuthController::class, 'logout']);
-
-    Route::post('/whatsapp/send-message', [WhatsappController::class, 'sendMessage']);
-
-    Route::get('/messages', [MessagesController::class, 'index']);
-    Route::get('/chats', [MessagesController::class, 'chatUsers']);
-    Route::get('/chat/{chatUser}', [MessagesController::class, 'chatUser']);
-    Route::post('/chat/user/{chatUser}', [MessagesController::class, 'updateChatUser']);
 });
+
+Route::get('/chats', [MessagesController::class, 'chatUsers']);
+Route::get('/chat/{chatUser}', [MessagesController::class, 'chatUser']);
+Route::post('/whatsapp/send-message', [WhatsappController::class, 'sendMessage']);
 Route::any('/whatsapp/webhook', [WhatsappController::class, 'handleWebhook']);
 Route::post('/ai', [AiController::class, 'generatePlaylist']);
 Route::post('/ai/mood', [AiController::class, 'getMood']);
 Route::post('/ai/brutal-boss', [AiController::class, 'sendBrutalBossMessage']);
+Route::post('/chat/user/{chatUser}', [MessagesController::class, 'updateChatUser']);
+Route::get('/messages', [MessagesController::class, 'index']);
 
 // Route::get('/spotify/test-token', [SpotifyController::class, 'testToken']);
 Route::get('/spotify/connection-status', [AccountController::class, 'checkConnection']);

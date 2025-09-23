@@ -64,4 +64,10 @@ class MessagesController extends Controller
             'data' => $chatUser,
         ]);
     }
+
+    public function sendMessage(Request $request)
+    {
+        $whatsappController = app(WhatsappController::class);
+        return $whatsappController->sendMessage($request);
+    }
 }
