@@ -10,6 +10,7 @@ class WhatsappMessage extends Model
         'timestamp' => 'datetime',
         'conversation_expires_at' => 'datetime',
         'pricing_billable' => 'boolean',
+        'actions' => 'array',
     ];
 
     public function chatUser()

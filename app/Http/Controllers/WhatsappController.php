@@ -18,10 +18,10 @@ class WhatsappController extends Controller
             'body' => 'required|string',
         ]);
 
-        return $this->sendWhatsAppMessage($validated['to'], $validated['body'], 'message');
+        return $this->sendWhatsAppMessage($validated['to'], $validated['body']);
     }
 
-    public function sendWhatsAppMessage($to, $body, $type = 'message')
+    public function sendWhatsAppMessage($to, $body)
     {
         $phoneNumberId = config('whatsapp.business_phone_id');
         $accessToken = config('whatsapp.access_token');
@@ -29,15 +29,6 @@ class WhatsappController extends Controller
         $baseUrl = config('whatsapp.base_url');
 
         $endpoint = "{$baseUrl}{$apiVersion}/{$phoneNumberId}/messages";
-
-        logger('Sending WhatsApp message', [
-            'to' => $to,
-            'body' => $body,
-            'type' => $type,
-            'endpoint' => $endpoint,
-            'phone_id' => $phoneNumberId,
-            'has_token' => !empty($accessToken)
-        ]);
 
         $response = Http::withToken($accessToken)->post($endpoint, [
             'messaging_product' => 'whatsapp',
@@ -47,16 +38,12 @@ class WhatsappController extends Controller
                 'body' => $body,
             ],
         ]);
+        logger("preparing to save message to database");
 
         $respJson = $response->json();
 
-        logger('WhatsApp API response', [
-            'status' => $response->status(),
-            'response' => $respJson,
-            'success' => $response->successful()
-        ]);
-
-        if (!empty($respJson['messages'][0]['id']) && $type === 'message') {
+        if (!empty($respJson['messages'][0]['id'])) {
+            logger('saving message to database');
             $waId = $respJson['contacts'][0]['wa_id'];
             $chatUser = ChatUser::where('phone', $waId)->first();
 
@@ -148,12 +135,38 @@ class WhatsappController extends Controller
                 ]);
             }
 
+            $actionsData = [
+                'type' => 'button',
+                'body' => [
+                    'text' => $message
+                ],
+                'action' => [
+                    'buttons' => [
+                        [
+                            'type' => 'reply',
+                            'reply' => [
+                                'id' => 'generate_playlist_yes_' . base64_encode($activity),
+                                'title' => 'Yes ✅'
+                            ]
+                        ],
+                        [
+                            'type' => 'reply',
+                            'reply' => [
+                                'id' => 'generate_playlist_no',
+                                'title' => 'No ❌'
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
             WhatsappMessage::create([
                 'chat_user_id' => $chatUser->id,
                 'wamid' => $respJson['messages'][0]['id'],
                 'from' => $phoneNumberId,
                 'to' => $to,
                 'body' => $message,
+                'actions' => $actionsData,
                 'type' => 'interactive',
                 'status' => null,
                 'timestamp' => now(),
@@ -217,6 +230,7 @@ class WhatsappController extends Controller
                         'from' => $msg['from'] ?? null,
                         'to' => $value['metadata']['display_phone_number'] ?? null,
                         'body' => $this->extractMessageBody($msg),
+                        'actions' => $this->extractMessageActions($msg),
                         'type' => $msg['type'] ?? null,
                         'status' => null,
                         'timestamp' => isset($msg['timestamp']) ? now()->setTimestamp($msg['timestamp']) : now(),
@@ -295,10 +309,9 @@ class WhatsappController extends Controller
                     $msg['text']['body']
                 );
             } else {
-                // normal chat response conversation
                 logger('normal chat response conversation');
                 $conversationalResponse = $aiController->generateConversationalResponse($msg['text']['body'], $from);
-                $this->sendWhatsAppMessage($from, $conversationalResponse, 'auto_reply');
+                $this->sendWhatsAppMessage($from, $conversationalResponse, 'message');
             }
         }
     }
@@ -313,10 +326,10 @@ class WhatsappController extends Controller
 
             GeneratePlaylistJob::dispatch($activity, $from);
 
-            $this->sendWhatsAppMessage($from, "Perfect! I'm generating your playlist now. This might take a moment... 🎵", 'auto_reply');
+            $this->sendWhatsAppMessage($from, "Perfect! I'm generating your playlist now. This might take a moment... 🎵", 'message');
 
         } elseif ($buttonId === 'generate_playlist_no') {
-            $this->sendWhatsAppMessage($from, "No problem! Let me know if you need anything else.", 'auto_reply');
+            $this->sendWhatsAppMessage($from, "No problem! Let me know if you need anything else.", 'message');
         }
     }
 
@@ -329,6 +342,15 @@ class WhatsappController extends Controller
         if ($msg['type'] === 'interactive' && !empty($msg['interactive']['button_reply'])) {
             $buttonReply = $msg['interactive']['button_reply'];
             return "Button clicked: " . ($buttonReply['title'] ?? '') . " (ID: " . ($buttonReply['id'] ?? '') . ")";
+        }
+
+        return null;
+    }
+
+    private function extractMessageActions($msg)
+    {
+        if ($msg['type'] === 'interactive' && !empty($msg['interactive'])) {
+            return $msg['interactive'];
         }
 
         return null;
