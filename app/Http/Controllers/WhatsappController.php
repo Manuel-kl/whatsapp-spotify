@@ -180,6 +180,7 @@ class WhatsappController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
+        logger('handleWebhook', $payload);
         if ($request->isMethod('get')) {
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
