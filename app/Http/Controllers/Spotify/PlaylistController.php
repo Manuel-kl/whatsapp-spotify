@@ -21,11 +21,41 @@ class PlaylistController extends Controller
     public function playlists()
     {
         try {
-            $playlists = $this->spotifyService->getPlaylists();
+            $response = $this->spotifyService->getPlaylists();
 
-            return response()->json($playlists);
+            // Format the playlists to match the frontend expectations
+            $formattedPlaylists = [];
+            
+            foreach ($response['items'] as $playlist) {
+                $formattedPlaylists[] = [
+                    'id' => $playlist['id'],
+                    'name' => $playlist['name'],
+                    'description' => $playlist['description'] ?? '',
+                    'public' => $playlist['public'],
+                    'track_count' => $playlist['tracks']['total'] ?? 0,
+                    'href' => $playlist['href'],
+                    'uri' => $playlist['uri'],
+                    'external_urls' => $playlist['external_urls'] ?? [],
+                    'images' => $playlist['images'] ?? [],
+                    'owner' => [
+                        'id' => $playlist['owner']['id'],
+                        'display_name' => $playlist['owner']['display_name'] ?? null,
+                    ],
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedPlaylists,
+                'total' => $response['total'],
+                'limit' => $response['limit'],
+                'offset' => $response['offset'],
+                'next' => $response['next'],
+                'previous' => $response['previous'],
+            ]);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Failed to get playlists',
                 'message' => $e->getMessage(),
             ], 500);
@@ -141,47 +171,42 @@ class PlaylistController extends Controller
     {
         try {
             $request->validate([
-                'activity' => 'required|string',
-                'playlist_name' => 'nullable|string|max:100',
-                'playlist_description' => 'nullable|string|max:300',
+                'name' => 'required|string|max:100',
+                'description' => 'nullable|string|max:300',
                 'public' => 'boolean',
             ]);
 
-            $jobId = Str::uuid()->toString();
-
-            Cache::put("playlist_job:{$jobId}", [
-                'job_id' => $jobId,
-                'status' => 'pending',
-                'progress' => 0,
-                'message' => 'Starting playlist generation...',
-                'created_at' => now()->toISOString(),
-                'updated_at' => now()->toISOString(),
-            ], 3600);
-
-            GeneratePlaylistJob::dispatch(
-                $request->activity,
-                null,
-                $jobId,
-                $request->playlist_name,
-                $request->playlist_description,
-                $request->boolean('public', false),
-                $request->user() ? $request->user()->id : null
-            )->onQueue('default');
+            $user = $this->spotifyService->getCurrentUser();
+            $response = $this->spotifyService->createPlaylist(
+                $request->name,
+                $request->description ?? '',
+                $request->boolean('public', false)
+            );
 
             return response()->json([
                 'success' => true,
-                'job_id' => $jobId,
-                'status' => 'pending',
-                'message' => 'Playlist generation started. Use the job_id to check progress.',
+                'data' => [
+                    'id' => $response['id'],
+                    'name' => $response['name'],
+                    'description' => $response['description'] ?? '',
+                    'public' => $response['public'],
+                    'track_count' => 0,
+                    'href' => $response['href'],
+                    'uri' => $response['uri'],
+                    'external_urls' => $response['external_urls'] ?? [],
+                ],
+                'message' => 'Playlist created successfully',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Validation failed',
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Failed to create playlist',
                 'message' => $e->getMessage(),
             ], 500);
@@ -241,10 +266,10 @@ class PlaylistController extends Controller
         try {
             $request->validate([
                 'playlist_id' => 'required|string',
-                'track_id' => 'required|string',
+                'track_uri' => 'required|string',
             ]);
 
-            $this->spotifyService->deleteSongFromPlaylist($request->playlist_id, $request->track_id);
+            $this->spotifyService->deleteSongFromPlaylist($request->playlist_id, $request->track_uri);
 
             return response()->json([
                 'success' => true,
@@ -252,12 +277,14 @@ class PlaylistController extends Controller
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Validation failed',
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Failed to delete song from playlist',
                 'message' => $e->getMessage(),
             ], 500);
@@ -281,6 +308,26 @@ class PlaylistController extends Controller
 
                 $track = $item['track'];
                 $formattedTracks[] = [
+                    'track' => [
+                        'id' => $track['id'],
+                        'name' => $track['name'],
+                        'uri' => $track['uri'],
+                        'duration_ms' => $track['duration_ms'],
+                        'artists' => array_map(function ($artist) {
+                            return [
+                                'id' => $artist['id'],
+                                'name' => $artist['name'],
+                            ];
+                        }, $track['artists']),
+                        'album' => [
+                            'id' => $track['album']['id'],
+                            'name' => $track['album']['name'],
+                        ],
+                        'external_urls' => $track['external_urls'] ?? [],
+                        'preview_url' => $track['preview_url'],
+                        'added_at' => $item['added_at'],
+                        'added_by' => $item['added_by']['id'] ?? null,
+                    ],
                     'song_name' => $track['name'],
                     'song_id' => $track['id'],
                     'song_url' => $track['external_urls']['spotify'],
@@ -311,21 +358,26 @@ class PlaylistController extends Controller
             }
 
             return response()->json([
-                'tracks' => $formattedTracks,
-                'total' => $response['total'],
-                'limit' => $response['limit'],
-                'offset' => $response['offset'],
-                'next' => $response['next'],
-                'previous' => $response['previous'],
+                'success' => true,
+                'data' => [
+                    'tracks' => $formattedTracks,
+                    'total' => $response['total'],
+                    'limit' => $response['limit'],
+                    'offset' => $response['offset'],
+                    'next' => $response['next'],
+                    'previous' => $response['previous'],
+                ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Validation failed',
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Failed to get playlist tracks',
                 'message' => $e->getMessage(),
             ], 500);

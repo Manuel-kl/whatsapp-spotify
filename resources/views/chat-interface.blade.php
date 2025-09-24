@@ -6,42 +6,70 @@
     <title>WhatsApp Spotify Chat Interface</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
-    <div class="container mx-auto flex flex-1 overflow-hidden">
+<body class="bg-gray-900 text-white h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 py-4 px-6 sticky top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fab fa-spotify text-green-500 text-2xl"></i>
+                <span class="text-xl font-bold">WhatsApp<span class="text-green-500">Spotify</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Home
+                </a>
+                <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Dashboard
+                </a>
+                <a href="/spotify-playlists" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    My Playlists
+                </a>
+                <a href="/chat" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">
+                    Chat
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto flex flex-1 overflow-hidden p-4">
         <!-- Sidebar with chat users -->
-        <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
-            <div class="p-4 border-b border-gray-200 font-semibold">
-                Chats
+        <div class="w-1/3 bg-gray-800 rounded-lg border border-gray-700 flex flex-col mr-4">
+            <div class="p-4 border-b border-gray-700 font-semibold flex items-center justify-between bg-gray-900">
+                <span>Chats</span>
+                <button id="refresh-chats" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
             <div class="flex-1 overflow-y-auto" id="chat-users">
                 <div class="p-4 text-center text-gray-500">Loading chats...</div>
             </div>
         </div>
 
-        <div class="w-2/3 flex flex-col">
-            <div class="p-4 border-b border-gray-200 font-semibold flex items-center justify-between" id="chat-header">
+        <div class="w-2/3 flex flex-col bg-gray-800 rounded-lg border border-gray-700">
+            <div class="p-4 border-b border-gray-700 font-semibold flex items-center justify-between bg-gray-900" id="chat-header">
                 <span>Select a chat</span>
-                <button id="rename-user-btn" class="text-blue-500 hover:text-blue-700 text-sm hidden">
+                <button id="rename-user-btn" class="text-green-500 hover:text-green-400 text-sm hidden">
                     Rename
                 </button>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-50" id="messages-container">
+            <div class="flex-1 overflow-y-auto p-4 bg-gray-900" id="messages-container">
                 <div class="flex items-center justify-center h-full text-gray-500" id="no-chat-selected">
                     Select a chat to start messaging
                 </div>
                 <div id="messages-list" class="space-y-4 hidden"></div>
             </div>
-            <div class="p-4 border-t border-gray-200 bg-white hidden" id="input-area">
+            <div class="p-4 border-t border-gray-700 bg-gray-900 hidden" id="input-area">
                 <div class="flex">
                     <input 
                         type="text" 
-                        class="flex-1 border border-gray-300 rounded-l-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        class="flex-1 bg-gray-700 text-white border border-gray-600 rounded-l-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-green-500" 
                         id="message-input" 
                         placeholder="Type a message..."
                     />
                     <button 
-                        class="bg-blue-500 text-white px-6 py-2 rounded-r-full hover:bg-blue-600 focus:outline-none" 
+                        class="bg-green-600 text-white px-6 py-2 rounded-r-lg hover:bg-green-700 focus:outline-none transition duration-300" 
                         id="send-button"
                     >
                         Send
@@ -51,20 +79,20 @@
         </div>
     </div>
 
-    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 w-96">
+    <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-6 w-96 border border-gray-700">
             <h3 class="text-lg font-semibold mb-4">Rename User</h3>
             <input 
                 type="text" 
                 id="rename-input" 
-                class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Enter new name"
             />
             <div class="flex justify-end space-x-2">
-                <button id="cancel-rename" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button id="cancel-rename" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition duration-300">
                     Cancel
                 </button>
-                <button id="save-rename" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                <button id="save-rename" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-300">
                     Save
                 </button>
             </div>
@@ -90,6 +118,7 @@
         const renameInput = document.getElementById('rename-input');
         const cancelRenameBtn = document.getElementById('cancel-rename');
         const saveRenameBtn = document.getElementById('save-rename');
+        const refreshChatsBtn = document.getElementById('refresh-chats');
 
         document.addEventListener('DOMContentLoaded', function() {
             loadChatUsers();
@@ -104,6 +133,7 @@
             renameUserBtn.addEventListener('click', openRenameModal);
             cancelRenameBtn.addEventListener('click', closeRenameModal);
             saveRenameBtn.addEventListener('click', saveRename);
+            refreshChatsBtn.addEventListener('click', loadChatUsers);
         });
 
         async function loadChatUsers() {
@@ -133,10 +163,10 @@
             
             chatUsers.forEach(user => {
                 const userElement = document.createElement('div');
-                userElement.className = `p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedChatUser && selectedChatUser.id === user.id ? 'bg-blue-50' : ''}`;
+                userElement.className = `p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-700 ${selectedChatUser && selectedChatUser.id === user.id ? 'bg-gray-700' : ''}`;
                 userElement.innerHTML = `
                     <div class="font-medium">${user.name || user.phone}</div>
-                    <div class="text-sm text-gray-500">${user.phone}</div>
+                    <div class="text-sm text-gray-400">${user.phone}</div>
                 `;
                 
                 userElement.addEventListener('click', () => selectChatUser(user));
@@ -149,8 +179,16 @@
             renderChatUsers();
             
             chatHeaderElement.innerHTML = `
-                <span>${user.name || user.phone}</span>
-                <button id="rename-user-btn" class="text-blue-500 hover:text-blue-700 text-sm">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-user text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <span>${user.name || user.phone}</span>
+                        <div class="text-xs text-gray-400">${user.phone}</div>
+                    </div>
+                </div>
+                <button id="rename-user-btn" class="text-green-500 hover:text-green-400 text-sm">
                     Rename
                 </button>
             `;
@@ -198,9 +236,9 @@
                 const messageElement = document.createElement('div');
                 
                 if (message.type === 'interactive' && message.actions) {
-                    messageElement.className = 'bg-white rounded-lg shadow p-4';
+                    messageElement.className = 'bg-gray-700 rounded-lg p-4 border border-gray-600';
                     const buttonsHtml = message.actions.action?.buttons?.map(button => 
-                        `<button class="bg-blue-100 text-blue-800 px-3 py-1 rounded mr-2 mt-2 text-sm">
+                        `<button class="bg-green-600 text-white px-3 py-1 rounded mr-2 mt-2 text-sm hover:bg-green-700">
                             ${button.reply?.title || 'Button'}
                         </button>`
                     ).join('') || '';
@@ -210,16 +248,16 @@
                         <div class="flex flex-wrap">
                             ${buttonsHtml}
                         </div>
-                        <div class="text-xs text-gray-500 mt-2 text-right">
+                        <div class="text-xs text-gray-400 mt-2 text-right">
                             ${new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                     `;
                 } else {
-                    messageElement.className = `max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-lg ${message.from === selectedChatUser.phone ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-200 text-gray-800'}`;
+                    messageElement.className = `max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-lg ${message.from === selectedChatUser.phone ? 'bg-gray-700 text-white mr-4' : 'bg-green-600 text-white ml-auto'}`;
                     
                     messageElement.innerHTML = `
                         <div>${message.body}</div>
-                        <div class="text-xs mt-1 text-right opacity-70">
+                        <div class="text-xs mt-1 text-right opacity-80">
                             ${new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                     `;
@@ -314,8 +352,16 @@
                     selectedChatUser.name = newName;
                     
                     chatHeaderElement.innerHTML = `
-                        <span>${newName}</span>
-                        <button id="rename-user-btn" class="text-blue-500 hover:text-blue-700 text-sm">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-green-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <span>${newName}</span>
+                                <div class="text-xs text-gray-400">${selectedChatUser.phone}</div>
+                            </div>
+                        </div>
+                        <button id="rename-user-btn" class="text-green-500 hover:text-green-400 text-sm">
                             Rename
                         </button>
                     `;

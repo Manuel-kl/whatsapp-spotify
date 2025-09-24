@@ -3,107 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - WhatsApp Spotify Integration</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard - WhatsApp Spotify Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="text-center">
-                            <i class="fab fa-spotify text-success"></i>
-                            WhatsApp Spotify Integration Dashboard
-                        </h3>
+<body class="bg-gray-900 text-white">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 py-4 px-6 sticky top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fab fa-spotify text-green-500 text-2xl"></i>
+                <span class="text-xl font-bold">WhatsApp<span class="text-green-500">Spotify</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Home
+                </a>
+                <a href="/dashboard" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">
+                    Dashboard
+                </a>
+                <a href="/spotify-playlists" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    My Playlists
+                </a>
+                <a href="/chat" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Chat
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Dashboard</h1>
+        </div>
+
+        @if(session('success'))
+            <div class="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded mb-6">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <!-- Spotify Connection Status -->
+        <div class="bg-gray-800 rounded-lg p-5 mb-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-900 rounded-full flex items-center justify-center mr-4">
+                        <i class="fab fa-spotify text-green-500 text-xl"></i>
                     </div>
-                    <div class="card-body">
-                        @if(session('success'))
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i> {{ session('success') }}
-                            </div>
-                        @endif
-
-                        @if(session('error'))
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                            </div>
-                        @endif
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card border-success">
-                                    <div class="card-header bg-success text-white">
-                                        <i class="fab fa-spotify"></i> Spotify Integration
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-success">
-                                            <i class="fas fa-check-circle"></i>
-                                            Connected to Spotify!
-                                        </p>
-                                        <p class="text-muted small">
-                                            Token expires: {{ $spotifyToken->expires_at }}
-                                        </p>
-                                        <form action="/api/spotify/disconnect" method="POST" class="mt-2">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                <i class="fas fa-unlink"></i> Disconnect
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="card border-primary">
-                                    <div class="card-header bg-primary text-white">
-                                        <i class="fab fa-whatsapp"></i> WhatsApp Integration
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-info">
-                                            <i class="fas fa-info-circle"></i>
-                                            WhatsApp webhook ready
-                                        </p>
-                                        <p class="text-muted small">
-                                            Send messages to create playlists based on mood!
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <h5>API Tests</h5>
-                            <p class="text-muted">Test the Spotify API connection:</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/api/spotify/test-token" class="btn btn-outline-success" target="_blank">
-                                    <i class="fas fa-flask"></i> Test Client Token
-                                </a>
-                                <a href="/api/spotify/connection-status" class="btn btn-outline-info" target="_blank">
-                                    <i class="fas fa-link"></i> Check Connection
-                                </a>
-                                <a href="/api/spotify/user-profile" class="btn btn-outline-primary" target="_blank">
-                                    <i class="fas fa-user"></i> Get Profile
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <h5>How it works</h5>
-                            <ol class="text-muted">
-                                <li>Connect your Spotify account using the button above</li>
-                                <li>Send a WhatsApp message describing your mood</li>
-                                <li>Our AI will create a personalized playlist for you</li>
-                                <li>Enjoy your music!</li>
-                            </ol>
-                        </div>
+                    <div>
+                        <h2 class="text-lg font-bold">Spotify Connection</h2>
+                        <p class="text-gray-400 text-sm">Status: Connected to Spotify</p>
+                        <p class="text-xs text-gray-500">Token expires: {{ $spotifyToken->expires_at }}</p>
                     </div>
                 </div>
+                <form action="/api/spotify/disconnect" method="POST">
+                    @csrf
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
+                        Disconnect
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Functions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <a href="/spotify-playlists" class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-green-500 transition duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-list text-green-500 text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Manage Playlists</h3>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">View, create, and edit your Spotify playlists</p>
+                <div class="text-green-500 text-sm">
+                    <i class="fas fa-arrow-right mr-2"></i> View Playlists
+                </div>
+            </a>
+
+            <a href="/chat" class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-green-500 transition duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fab fa-whatsapp text-green-500 text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Chat Interface</h3>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">Send WhatsApp messages to control your music</p>
+                <div class="text-green-500 text-sm">
+                    <i class="fas fa-arrow-right mr-2"></i> Open Chat
+                </div>
+            </a>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 class="text-lg font-bold mb-4">Recent Activity</h2>
+            <div class="text-gray-500 text-center py-8">
+                <i class="fas fa-history text-2xl mb-2"></i>
+                <p>No recent activity yet</p>
+                <p class="text-sm mt-2">Start by sending a message in the chat interface</p>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

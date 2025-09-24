@@ -9,6 +9,9 @@ Route::get('/', function () {
 });
 
 Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+Route::get('/spotify-playlists', function() {
+    return view('spotify-playlists');
+})->name('spotify.playlists');
 
 Route::get('/dashboard', [SpotifyController::class, 'dashboard'])->name('dashboard');
 Route::get('/spotify/authorize', [SpotifyController::class, 'redirectToSpotify'])->name('spotify.authorize');
