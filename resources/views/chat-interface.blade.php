@@ -23,6 +23,9 @@
                 <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
                     Dashboard
                 </a>
+                <a href="/analytics" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Analytics
+                </a>
                 <a href="/spotify-playlists" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
                     My Playlists
                 </a>
@@ -79,6 +82,39 @@
         </div>
     </div>
 
+    <!-- WhatsApp Connection Modal -->
+    <div id="whatsapp-connection-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 w-96 border border-gray-700 max-w-11/12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fab fa-whatsapp text-green-500 mr-2"></i>
+                    Connect to WhatsApp
+                </h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="text-gray-300 mb-4">
+                <p class="mb-3">This application is currently using the Meta test number.</p>
+                <p class="mb-4">To start chatting, please initiate a conversation from your WhatsApp to the number below:</p>
+                
+                <div class="bg-gray-700 rounded-lg p-3 mb-4 flex items-center justify-between">
+                    <span id="phone-number-display" class="font-mono text-green-400">+1 (555) 178-2401</span>
+                    <button id="copy-number-btn" class="ml-2 text-gray-300 hover:text-white">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <div id="copy-status" class="text-green-500 text-sm hidden mb-2"></div>
+            </div>
+            <div class="flex justify-end">
+                <button id="dismiss-modal-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-300">
+                    Got It
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="rename-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-gray-800 rounded-lg p-6 w-96 border border-gray-700">
             <h3 class="text-lg font-semibold mb-4">Rename User</h3>
@@ -99,6 +135,14 @@
         </div>
     </div>
 
+    <style>
+        /* Prevent long words from causing overflow in chat messages */
+        .message-content {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+    </style>
     <script>
         const API_BASE_URL = '/api';
         let selectedChatUser = null;
@@ -119,6 +163,11 @@
         const cancelRenameBtn = document.getElementById('cancel-rename');
         const saveRenameBtn = document.getElementById('save-rename');
         const refreshChatsBtn = document.getElementById('refresh-chats');
+        const whatsappModal = document.getElementById('whatsapp-connection-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const dismissModalBtn = document.getElementById('dismiss-modal-btn');
+        const copyNumberBtn = document.getElementById('copy-number-btn');
+        const copyStatus = document.getElementById('copy-status');
 
         document.addEventListener('DOMContentLoaded', function() {
             loadChatUsers();
@@ -128,6 +177,43 @@
                 if (e.key === 'Enter') {
                     sendMessage();
                 }
+            });
+            
+            // Show WhatsApp connection modal on page load
+            setTimeout(() => {
+                whatsappModal.classList.remove('hidden');
+            }, 500);
+            
+            // Close modal buttons
+            closeModalBtn.addEventListener('click', function() {
+                whatsappModal.classList.add('hidden');
+            });
+            
+            dismissModalBtn.addEventListener('click', function() {
+                whatsappModal.classList.add('hidden');
+            });
+            
+            // Copy phone number functionality
+            copyNumberBtn.addEventListener('click', function() {
+                const phoneNumber = '+1 (555) 178-2401';
+                
+                navigator.clipboard.writeText(phoneNumber).then(function() {
+                    copyStatus.textContent = 'Phone number copied to clipboard!';
+                    copyStatus.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        copyStatus.classList.add('hidden');
+                    }, 3000);
+                }).catch(function(err) {
+                    console.error('Failed to copy phone number: ', err);
+                    copyStatus.textContent = 'Failed to copy phone number';
+                    copyStatus.classList.remove('hidden').classList.add('text-red-500');
+                    
+                    setTimeout(() => {
+                        copyStatus.classList.add('hidden');
+                        copyStatus.classList.remove('text-red-500');
+                    }, 3000);
+                });
             });
             
             renameUserBtn.addEventListener('click', openRenameModal);
@@ -244,7 +330,7 @@
                     ).join('') || '';
                     
                     messageElement.innerHTML = `
-                        <div class="font-medium mb-2">${message.body}</div>
+                        <div class="font-medium mb-2 message-content">${message.body}</div>
                         <div class="flex flex-wrap">
                             ${buttonsHtml}
                         </div>
@@ -256,7 +342,7 @@
                     messageElement.className = `max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-lg ${message.from === selectedChatUser.phone ? 'bg-gray-700 text-white mr-4' : 'bg-green-600 text-white ml-auto'}`;
                     
                     messageElement.innerHTML = `
-                        <div>${message.body}</div>
+                        <div class="message-content">${message.body}</div>
                         <div class="text-xs mt-1 text-right opacity-80">
                             ${new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>

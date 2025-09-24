@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\SpotifyController;
 use Illuminate\Support\Facades\Route;
@@ -7,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+Route::get('/api/analytics', [AnalyticsController::class, 'apiData'])->name('analytics.data');
 
 Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
 Route::get('/spotify-playlists', function() {

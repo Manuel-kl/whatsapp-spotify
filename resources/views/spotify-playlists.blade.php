@@ -23,6 +23,9 @@
                 <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
                     Dashboard
                 </a>
+                <a href="/analytics" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Analytics
+                </a>
                 <a href="/chat" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
                     Chat
                 </a>

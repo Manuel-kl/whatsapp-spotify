@@ -15,8 +15,13 @@
                 <i class="fab fa-spotify text-green-500 text-2xl"></i>
                 <span class="text-xl font-bold">WhatsApp<span class="text-green-500">Spotify</span></span>
             </div>
-            <div>
-                <a href="/dashboard" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">Open App</a>
+            <div class="flex space-x-4">
+                <a href="/analytics" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">
+                    <i class="fas fa-chart-line mr-1"></i> Analytics
+                </a>
+                <a href="/dashboard" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">
+                    Open App
+                </a>
             </div>
         </div>
     </nav>
@@ -30,11 +35,14 @@
                         Manage Your <span class="text-green-500">Spotify Playlists</span> Through WhatsApp
                     </h1>
                     <p class="text-xl text-gray-300 mb-8">
-                        Connect with friends, share music, and manage your Spotify playlists directly through WhatsApp conversations.
+                        Connect with friends, share music, and manage your Spotify playlists directly through WhatsApp conversations. Plus, track your messaging patterns with our new analytics dashboard.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <a href="/dashboard" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold text-lg transition duration-300">
                             Open App
+                        </a>
+                        <a href="/analytics" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-bold text-lg transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-chart-pie mr-2"></i> View Analytics
                         </a>
                         <a href="#how-it-works" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-full font-bold text-lg transition duration-300">
                             See How It Works
@@ -83,7 +91,7 @@
     <section class="py-16 px-4 bg-gray-900 bg-opacity-50">
         <div class="max-w-7xl mx-auto">
             <h2 class="text-3xl font-bold text-center mb-16">How You Can Use WhatsApp Spotify</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <div class="text-green-500 text-3xl mb-4">
                         <i class="fas fa-comment-dots"></i>
@@ -109,6 +117,15 @@
                     <h3 class="text-xl font-bold mb-3">Collaboration</h3>
                     <p class="text-gray-400">
                         Work on playlists together with friends in real-time through WhatsApp conversations.
+                    </p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <div class="text-purple-500 text-3xl mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Messaging Analytics</h3>
+                    <p class="text-gray-400">
+                        Track your messaging patterns, peak hours, and most contacted users with our analytics dashboard.
                     </p>
                 </div>
             </div>
@@ -182,7 +199,83 @@
                             <i class="fas fa-check-circle text-green-500 mr-3"></i>
                             <span>Collaborate on playlists with friends</span>
                         </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-purple-500 mr-3"></i>
+                            <span>View detailed messaging analytics</span>
+                        </li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Preview Section -->
+    <section class="py-16 px-4 bg-gray-900 bg-opacity-50">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-16">Messaging Analytics Dashboard</h2>
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-1/2">
+                    <h3 class="text-2xl font-bold mb-4">Understand Your Messaging Patterns</h3>
+                    <p class="text-gray-300 mb-6">
+                        Our analytics dashboard provides insights into your messaging behavior. Discover when you're most active, who you text the most, and how your communication patterns have evolved over time.
+                    </p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center">
+                            <i class="fas fa-chart-bar text-purple-500 mr-3"></i>
+                            <span>Track your messaging frequency over time</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-clock text-purple-500 mr-3"></i>
+                            <span>Identify your peak messaging hours</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-users text-purple-500 mr-3"></i>
+                            <span>See your most contacted users</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-calendar-alt text-purple-500 mr-3"></i>
+                            <span>Analyze your weekly messaging patterns</span>
+                        </li>
+                    </ul>
+                    <a href="/analytics" class="inline-block mt-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-bold transition duration-300">
+                        <i class="fas fa-chart-line mr-2"></i> View Dashboard
+                    </a>
+                </div>
+                <div class="lg:w-1/2">
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold">Analytics Preview</h3>
+                            <div class="text-purple-500">
+                                <i class="fas fa-chart-line text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-900 rounded-lg p-4 h-80 overflow-y-auto">
+                            <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div class="font-semibold">Most Active Hours</div>
+                                    <div class="text-green-500">12 PM - 2 PM</div>
+                                </div>
+                            </div>
+                            <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div class="font-semibold">Most Contacted User</div>
+                                    <div class="text-green-500">+1234567890</div>
+                                </div>
+                            </div>
+                            <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div class="font-semibold">Messages Today</div>
+                                    <div class="text-green-500">42</div>
+                                </div>
+                            </div>
+                            <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div class="font-semibold">Peak Day</div>
+                                    <div class="text-green-500">Friday</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,9 +358,12 @@
                             Connect your Spotify account to unlock powerful features that let you manage your music directly through WhatsApp.
                         </p>
                     </div>
-                    <div class="md:w-1/3 flex justify-center">
+                    <div class="md:w-1/3 flex flex-col space-y-4">
                         <a href="/dashboard" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold text-lg w-full text-center transition duration-300">
                             Open App
+                        </a>
+                        <a href="/analytics" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-bold text-lg w-full text-center transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-chart-line mr-2"></i> Analytics
                         </a>
                     </div>
                 </div>

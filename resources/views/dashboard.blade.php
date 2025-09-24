@@ -22,6 +22,9 @@
                 <a href="/dashboard" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-medium transition duration-300">
                     Dashboard
                 </a>
+                <a href="/analytics" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
+                    Analytics
+                </a>
                 <a href="/spotify-playlists" class="text-gray-300 hover:text-white px-3 py-2 rounded-md font-medium transition duration-300">
                     My Playlists
                 </a>
@@ -72,7 +75,7 @@
         </div>
 
         <!-- Main Functions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <a href="/spotify-playlists" class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-green-500 transition duration-300">
                 <div class="flex items-center mb-4">
                     <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center mr-4">
@@ -96,6 +99,19 @@
                 <p class="text-gray-400 text-sm mb-4">Send WhatsApp messages to control your music</p>
                 <div class="text-green-500 text-sm">
                     <i class="fas fa-arrow-right mr-2"></i> Open Chat
+                </div>
+            </a>
+
+            <a href="/analytics" class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-purple-500 transition duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-purple-500 text-lg"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Messaging Analytics</h3>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">View insights about your WhatsApp communications</p>
+                <div class="text-purple-500 text-sm">
+                    <i class="fas fa-arrow-right mr-2"></i> View Analytics
                 </div>
             </a>
         </div>
