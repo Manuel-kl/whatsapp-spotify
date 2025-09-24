@@ -60,17 +60,29 @@
                         <i class="fab fa-spotify text-green-500 text-xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold">Spotify Connection</h2>
-                        <p class="text-gray-400 text-sm">Status: Connected to Spotify</p>
-                        <p class="text-xs text-gray-500">Token expires: {{ $spotifyToken->expires_at }}</p>
+                        @if($spotifyToken)
+                            <h2 class="text-lg font-bold">Spotify Connection</h2>
+                            <p class="text-gray-400 text-sm">Status: Connected to Spotify</p>
+                            <p class="text-xs text-gray-500">Token expires: {{ $spotifyToken->expires_at }}</p>
+                        @else
+                            <h2 class="text-lg font-bold">Spotify Connection</h2>
+                            <p class="text-gray-400 text-sm">Status: Not connected</p>
+                            <p class="text-xs text-gray-500">Please connect your Spotify account</p>
+                        @endif
                     </div>
                 </div>
-                <form action="/api/spotify/disconnect" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
-                        Disconnect
-                    </button>
-                </form>
+                @if($spotifyToken)
+                    <form action="/spotify/disconnect" method="POST">
+                        @csrf
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
+                            Disconnect
+                        </button>
+                    </form>
+                @else
+                    <a href="/spotify/connect" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium">
+                        Connect
+                    </a>
+                @endif
             </div>
         </div>
 

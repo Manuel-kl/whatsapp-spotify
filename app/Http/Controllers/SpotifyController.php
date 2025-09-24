@@ -24,7 +24,7 @@ class SpotifyController extends Controller
                 'access_token' => $token,
                 'message' => 'Successfully retrieved Spotify access token',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
@@ -34,12 +34,16 @@ class SpotifyController extends Controller
     public function dashboard()
     {
         $spotifyToken = SpotifyToken::first();
-        if (!$spotifyToken) {
-            return redirect()->route('spotify.authorize');
-        }
-
-        if ($spotifyToken->expires_at < now()) {
-            $this->spotifyService->refreshAccessToken($spotifyToken->refresh_token);
+        
+        // Don't redirect if there's no token, just pass null to the view
+        if ($spotifyToken && $spotifyToken->expires_at < now()) {
+            try {
+                $this->spotifyService->refreshAccessToken($spotifyToken->refresh_token);
+                $spotifyToken = $spotifyToken->fresh(); // Refresh the model instance
+            } catch (Exception $e) {
+                // If refresh fails, token might be invalid, so set to null
+                $spotifyToken = null;
+            }
         }
 
         return view('dashboard', compact('spotifyToken'));
@@ -75,7 +79,7 @@ class SpotifyController extends Controller
                 $spotifyToken = $spotifyToken->fresh();
 
                 return view('dashboard', compact('spotifyToken'));
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return view('spotify.connect', compact('authUrl'));
             }
         }
@@ -113,10 +117,21 @@ class SpotifyController extends Controller
             ]);
 
             return redirect()->route('dashboard')->with('success', 'Successfully connected your Spotify account!');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function disconnect()
+    {
+        $spotifyToken = SpotifyToken::first();
+
+        if ($spotifyToken) {
+            $spotifyToken->delete();
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Spotify account disconnected successfully!');
     }
 }

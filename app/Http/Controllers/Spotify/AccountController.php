@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Spotify;
 use App\Http\Controllers\Controller;
 use App\Models\SpotifyToken;
 use App\Service\SpotifyService;
+use Exception;
 
 class AccountController extends Controller
 {
@@ -33,7 +34,7 @@ class AccountController extends Controller
                 'expires_at' => $spotifyToken->expires_at,
                 'message' => 'Spotify account is connected',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'connected' => false,
                 'message' => $e->getMessage(),
@@ -81,7 +82,7 @@ class AccountController extends Controller
                 ],
                 'message' => 'Successfully retrieved user profile from Spotify',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),

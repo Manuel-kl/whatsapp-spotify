@@ -18,6 +18,7 @@ Route::get('/spotify-playlists', function() {
 })->name('spotify.playlists');
 
 Route::get('/dashboard', [SpotifyController::class, 'dashboard'])->name('dashboard');
+Route::get('/spotify/connect', [SpotifyController::class, 'redirectToSpotify'])->name('spotify.connect');
 Route::get('/spotify/authorize', [SpotifyController::class, 'redirectToSpotify'])->name('spotify.authorize');
 Route::get('/spotify/callback', [SpotifyController::class, 'handleSpotifyCallback'])->name('spotify.callback');
 Route::post('/spotify/disconnect', [SpotifyController::class, 'disconnect'])->name('spotify.disconnect');
