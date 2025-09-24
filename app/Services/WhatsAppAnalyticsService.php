@@ -15,14 +15,14 @@ class WhatsAppAnalyticsService
     public function getMostContactedUsers($limit = 10, $days = 30)
     {
         $businessPhoneId = config('services.whatsapp.business_phone_id', env('WHATSAPP_BUSINESS_PHONE_ID'));
-        return ChatUser::select('chat_users.*', DB::raw('COUNT(whatsapp_messages.id) as message_count'))
+        return ChatUser::select('chat_users.id', 'chat_users.name', 'chat_users.phone', 'chat_users.created_at', 'chat_users.updated_at', DB::raw('COUNT(whatsapp_messages.id) as message_count'))
             ->join('whatsapp_messages', 'chat_users.id', '=', 'whatsapp_messages.chat_user_id')
             ->whereBetween('whatsapp_messages.timestamp', [
                 Carbon::now()->subDays($days),
                 Carbon::now()
             ])
             ->where('whatsapp_messages.from', '!=', $businessPhoneId)
-            ->groupBy('chat_users.id')
+            ->groupBy('chat_users.id', 'chat_users.name', 'chat_users.phone', 'chat_users.created_at', 'chat_users.updated_at')
             ->orderByDesc('message_count')
             ->limit($limit)
             ->get();
@@ -34,14 +34,14 @@ class WhatsAppAnalyticsService
     public function getMostRepliedUsers($limit = 10, $days = 30)
     {
         $businessPhoneId = config('services.whatsapp.business_phone_id', env('WHATSAPP_BUSINESS_PHONE_ID'));
-        return ChatUser::select('chat_users.*', DB::raw('COUNT(whatsapp_messages.id) as message_count'))
+        return ChatUser::select('chat_users.id', 'chat_users.name', 'chat_users.phone', 'chat_users.created_at', 'chat_users.updated_at', DB::raw('COUNT(whatsapp_messages.id) as message_count'))
             ->join('whatsapp_messages', 'chat_users.id', '=', 'whatsapp_messages.chat_user_id')
             ->whereBetween('whatsapp_messages.timestamp', [
                 Carbon::now()->subDays($days),
                 Carbon::now()
             ])
             ->where('whatsapp_messages.from', '!=', $businessPhoneId)
-            ->groupBy('chat_users.id')
+            ->groupBy('chat_users.id', 'chat_users.name', 'chat_users.phone', 'chat_users.created_at', 'chat_users.updated_at')
             ->orderByDesc('message_count')
             ->limit($limit)
             ->get();
