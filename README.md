@@ -37,7 +37,7 @@ To run this project, you'll need to set up the following environment variables i
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/username/whatsapp-spotify-mcp.git
+   git clone https://github.com/manuel-kl/whatsapp-spotify-mcp.git
    cd whatsapp-spotify-mcp
    ```
 
